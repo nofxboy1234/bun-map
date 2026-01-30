@@ -6,7 +6,7 @@
  */
 
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import { App } from "./App";
 
 const elem = document.getElementById("root")!;
@@ -22,5 +22,9 @@ if (import.meta.hot) {
   root.render(app);
 } else {
   // The hot module reloading API is not available in production.
-  createRoot(elem).render(app);
+  if (elem.hasChildNodes()) {
+    hydrateRoot(elem, app);
+  } else {
+    createRoot(elem).render(app);
+  }
 }
