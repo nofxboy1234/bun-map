@@ -1,0 +1,5 @@
+🚀 Server running at http://localhost:3000/
+🔗 SSR available at http://localhost:3000/ssr
+DEBUG: import.meta.dir: /home/dylan/repos/bun-map/src
+DEBUG: appHtml: <link rel="preload" as="image" href="/home/dylan/repos/bun-map/src/logo.svg"/><link rel="preload" as="image" href="/home/dylan/repos/bun-map/src/react.svg"/><div class="app"><div class="logo-container"><img src="/home/dylan/repos/bun-map/src/logo.svg" alt="Bun Logo" class="logo bun-logo"/><img src="/home/dylan/repos/bun-map/src/react.svg" alt="React Logo" class="logo react-logo"/></div><h1>Bun + React</h1><p>Edit <code>src/App.tsx</code> and save to test HMR</p><div class="api-tester"><form class="endpoint-row"><select name="method" class="method"><option value="GET">GET</option><option value="PUT">PUT</option></select><input type="text" class="url-input" placeholder="/api/hello" name="endpoint" value="/api/hello"/><button type="submit" class="send-button">Send</button></form><textarea readOnly="" placeholder="Response will appear here..." class="response-area"></textarea></div></div>
+Bundled page in 36ms: src/index.html

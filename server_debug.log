@@ -1,0 +1,6 @@
+🚀 Server running at http://localhost:3000/
+🔗 SSR available at http://localhost:3000/ssr
+DEBUG: index type: object Object []
+error: Expected a Response object, but received 'HTMLBundle {
+  index: "/home/dylan/repos/bun-map/src/index.html",
+}'
