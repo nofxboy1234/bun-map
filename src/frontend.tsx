@@ -12,7 +12,7 @@ import { App } from "./App";
 if (import.meta.hot) {
   console.log("🔥 [HMR] Data on load:", import.meta.hot.data);
   import.meta.hot.accept();
-  import.meta.hot.dispose((data) => {
+  import.meta.hot.dispose((_data) => {
     console.log("♻️ [HMR] Disposing module...");
   });
 }
