@@ -9,6 +9,14 @@ import { StrictMode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { App } from "./App";
 
+if (import.meta.hot) {
+  console.log("🔥 [HMR] Data on load:", import.meta.hot.data);
+  import.meta.hot.accept();
+  import.meta.hot.dispose((data) => {
+    console.log("♻️ [HMR] Disposing module...");
+  });
+}
+
 const elem = document.getElementById("root")!;
 const app = (
   <StrictMode>
@@ -16,15 +24,28 @@ const app = (
   </StrictMode>
 );
 
-if (import.meta.hot) {
-  // With hot module reloading, `import.meta.hot.data` is persisted.
-  const root = (import.meta.hot.data.root ??= createRoot(elem));
+console.log("#### frontend ####");
+
+let root;
+
+if (import.meta.hot && import.meta.hot.data.root) {
+  console.log("🔥 [HMR] Reusing existing root (frontend 1)");
+  root = import.meta.hot.data.root;
   root.render(app);
 } else {
-  // The hot module reloading API is not available in production.
+  console.log("🌱 [INIT] Creating new root (frontend 2)");
+
   if (elem.hasChildNodes()) {
-    hydrateRoot(elem, app);
+    console.log("💧 [HYDRATE] Hydrating server-rendered content (frontend a)");
+    root = hydrateRoot(elem, app);
   } else {
-    createRoot(elem).render(app);
+    console.log("🚀 [RENDER] Client-side render (frontend b)");
+    root = createRoot(elem);
+    root.render(app);
+  }
+
+  if (import.meta.hot) {
+    console.log("💾 [HMR] Saving root to data (frontend c)");
+    import.meta.hot.data.root = root;
   }
 }
