@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useRouter, Link, useCache, SimpleCache } from "./simple-router";
+import { useState, useEffect, useRef } from "react";
+import { useRouter, Link, useCache } from "./simple-router";
 
 // --- Helpers ---
 // A hook to safely get data from cache, or fetch it if missing (e.g. on page reload).

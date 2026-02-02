@@ -1,4 +1,3 @@
-import React from "react";
 import { useRouter } from "./simple-router";
 import { matchRoute } from "./routes";
 import "./index.css";
