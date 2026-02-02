@@ -2,17 +2,51 @@ import { serve } from "bun";
 import { renderToString } from "react-dom/server";
 import index from "./index.html";
 import { App } from "./App";
+import { ServerRouter, SimpleCache, CacheProvider } from "./simple-router";
 
 const server = serve({
   routes: {
     "/ssr": async (req) => {
-      const appHtml = renderToString(<App />);
+      // 1. Create a fresh cache for this request
+      const cache = new SimpleCache();
+      const url = new URL(req.url);
+
+      // 2. Pre-fetch data based on route (Server-Side Data Routing)
+      if (url.pathname === "/" || url.pathname === "/ssr") {
+        await cache.fetch("pokemon-list", async () => {
+          const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=5");
+          return res.json();
+        });
+      } else if (url.pathname === "/pokemon") {
+        const id = url.searchParams.get("id");
+        if (id) {
+          await cache.fetch(`pokemon-${id}`, async () => {
+            const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+            return res.json();
+          });
+        }
+      }
+
+      // 3. Render with the populated cache
+      const appHtml = renderToString(
+        <CacheProvider cache={cache}>
+          <ServerRouter url={req.url}>
+            <App />
+          </ServerRouter>
+        </CacheProvider>
+      );
+      
       const origin = new URL(req.url).origin;
       const response = await fetch(origin);
       const html = await response.text();
 
+      // 4. Inject HTML and Data Snapshot
       let ssrHtml = html.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`);
-      ssrHtml = ssrHtml.replaceAll(import.meta.dir + "/", "/src/");
+      
+      // Inject the cache state for client hydration
+      const snapshot = cache.snapshot();
+      const hydrationScript = `<script>window.__INITIAL_DATA__ = ${JSON.stringify(snapshot)}</script>`;
+      ssrHtml = ssrHtml.replace("</body>", `${hydrationScript}</body>`);
 
       return new Response(ssrHtml, {
         headers: { "Content-Type": "text/html" },

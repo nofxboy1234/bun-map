@@ -1,26 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter, Link, Cache } from "./simple-router";
+import { useRouter, Link, useCache } from "./simple-router";
 import "./index.css";
 
 // --- Helpers ---
 // A hook to safely get data from cache, or fetch it if missing (e.g. on page reload).
 // This matches the "subscription initialization" pattern.
 function useData<T>(key: string, fetcher: () => Promise<T>) {
-  const [data, setData] = useState<T | undefined>(Cache.get(key));
+  const cache = useCache();
+  const [data, setData] = useState<T | undefined>(cache.get(key));
   const fetchedRef = useRef(false);
 
   useEffect(() => {
     // If we already have data (from prefetch), do nothing.
     if (data) return;
-
+    
     // Prevent double-fetching in StrictMode
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
-    Cache.fetch(key, fetcher).then((newData) => {
+    cache.fetch(key, fetcher).then((newData) => {
       setData(newData);
     });
-  }, [key, data, fetcher]);
+  }, [key, data, fetcher, cache]);
 
   return data;
 }
@@ -43,11 +44,13 @@ function PokemonDetail() {
 
   return (
     <div className="card">
-      <Link href="/" className="back-link">
-        ← Back to List
-      </Link>
+      <Link href="/" className="back-link">← Back to List</Link>
       <h2>{pokemon.name}</h2>
-      <img src={pokemon.sprites.front_default} alt={pokemon.name} className="pixel-art" />
+      <img 
+        src={pokemon.sprites.front_default} 
+        alt={pokemon.name} 
+        className="pixel-art"
+      />
       <div className="stats">
         <p>Height: {pokemon.height}</p>
         <p>Weight: {pokemon.weight}</p>
@@ -57,6 +60,7 @@ function PokemonDetail() {
 }
 
 function PokemonList() {
+  const cache = useCache();
   const cacheKey = "pokemon-list";
   const list = useData(cacheKey, async () => {
     const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=5");
@@ -72,7 +76,7 @@ function PokemonList() {
         {list.results.map((p: any) => {
           const id = p.url.split("/").filter(Boolean).pop();
           const detailKey = `pokemon-${id}`;
-
+          
           return (
             <Link
               key={id}
@@ -80,12 +84,10 @@ function PokemonList() {
               className="list-item"
               // The Magic: Fetch details BEFORE navigating.
               // This makes the next screen render instantly with data.
-              prefetch={() =>
-                Cache.fetch(detailKey, async () => {
-                  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-                  return res.json();
-                })
-              }
+              prefetch={() => cache.fetch(detailKey, async () => {
+                const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+                return res.json();
+              })}
             >
               {p.name}
             </Link>
@@ -101,7 +103,7 @@ export function App() {
 
   // Simple Switch Router
   let content;
-  if (path === "/") {
+  if (path === "/" || path === "/ssr") {
     content = <PokemonList />;
   } else if (path === "/pokemon") {
     content = <PokemonDetail />;
