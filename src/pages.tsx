@@ -11,7 +11,7 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
   useEffect(() => {
     // If we already have data (from prefetch), do nothing.
     if (data) return;
-    
+
     // Prevent double-fetching in StrictMode
     if (fetchedRef.current) return;
     fetchedRef.current = true;
@@ -41,7 +41,7 @@ export const fetchPokemonDetail = async (id: string) => {
 export function PokemonDetail() {
   const { query } = useRouter();
   const id = query.get("id");
-  
+
   if (!id) return <div>Missing ID</div>;
 
   const cacheKey = `pokemon-${id}`;
@@ -52,13 +52,11 @@ export function PokemonDetail() {
 
   return (
     <div className="card">
-      <Link href="/" className="back-link">← Back to List</Link>
+      <Link href="/" className="back-link">
+        ← Back to List
+      </Link>
       <h2>{pokemon.name}</h2>
-      <img 
-        src={pokemon.sprites.front_default} 
-        alt={pokemon.name} 
-        className="pixel-art"
-      />
+      <img src={pokemon.sprites.front_default} alt={pokemon.name} className="pixel-art" />
       <div className="stats">
         <p>Height: {pokemon.height}</p>
         <p>Weight: {pokemon.weight}</p>
@@ -81,7 +79,7 @@ export function PokemonList() {
         {list.results.map((p: any) => {
           const id = p.url.split("/").filter(Boolean).pop();
           const detailKey = `pokemon-${id}`;
-          
+
           return (
             <Link
               key={id}

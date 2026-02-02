@@ -2,45 +2,75 @@ import { useSyncExternalStore, useMemo, createContext, useContext } from "react"
 
 // --- 1. The Simple Cache System ---
 
+type CacheEntry<T> = {
+  value: T;
+  expiry: number;
+};
+
 export class SimpleCache {
-  private data = new Map<string, any>();
+  private data = new Map<string, CacheEntry<any>>();
   private pending = new Map<string, Promise<any>>();
 
-  constructor(initialData?: Record<string, any>) {
+  constructor(initialData?: Record<string, CacheEntry<any>>) {
     if (initialData) {
       this.restore(initialData);
     }
   }
 
   get(key: string) {
-    return this.data.get(key);
+    const entry = this.data.get(key);
+    if (!entry) return undefined;
+
+    if (Date.now() > entry.expiry) {
+      this.data.delete(key);
+      return undefined;
+    }
+
+    return entry.value;
   }
 
   has(key: string) {
-    return this.data.has(key);
+    // Returns true only if data exists AND is valid
+    const entry = this.data.get(key);
+    if (!entry) return false;
+    if (Date.now() > entry.expiry) {
+      this.data.delete(key);
+      return false;
+    }
+    return true;
   }
 
-  async fetch<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
-    if (this.data.has(key)) return this.data.get(key);
+  // ttl: Time to live in milliseconds (default: 5 minutes)
+  async fetch<T>(key: string, fetcher: () => Promise<T>, ttl = 1000 * 60 * 5): Promise<T> {
+    // Check for valid cached data
+    if (this.has(key)) {
+      return this.data.get(key)!.value;
+    }
+
+    // Deduplicate concurrent requests
     if (this.pending.has(key)) return this.pending.get(key);
 
-    const promise = fetcher().then((data) => {
-      this.data.set(key, data);
+    const promise = fetcher().then((value) => {
+      this.data.set(key, { value, expiry: Date.now() + ttl });
       this.pending.delete(key);
-      return data;
+      return value;
     });
 
     this.pending.set(key, promise);
     return promise;
   }
 
+  invalidate(key: string) {
+    this.data.delete(key);
+  }
+
   snapshot() {
     return Object.fromEntries(this.data);
   }
 
-  restore(data: Record<string, any>) {
-    Object.entries(data).forEach(([key, value]) => {
-      this.data.set(key, value);
+  restore(data: Record<string, CacheEntry<any>>) {
+    Object.entries(data).forEach(([key, entry]) => {
+      this.data.set(key, entry);
     });
   }
 }
@@ -58,7 +88,13 @@ function AutoHydratedCache() {
 
 const CacheContext = createContext<SimpleCache>(globalCache);
 
-export function CacheProvider({ cache, children }: { cache: SimpleCache; children: React.ReactNode }) {
+export function CacheProvider({
+  cache,
+  children,
+}: {
+  cache: SimpleCache;
+  children: React.ReactNode;
+}) {
   return <CacheContext.Provider value={cache}>{children}</CacheContext.Provider>;
 }
 
@@ -97,7 +133,7 @@ export function ServerRouter({ url, children }: { url: string; children: React.R
 
 export function useRouter() {
   const serverUrl = useContext(ServerContext);
-  
+
   // On server, return the context value. On client (during hydration), this should technically match window.location.
   const getServerSnapshot = () => serverUrl || "http://localhost/";
 

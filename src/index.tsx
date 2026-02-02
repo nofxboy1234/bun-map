@@ -24,16 +24,16 @@ const server = serve({
           <ServerRouter url={req.url}>
             <App />
           </ServerRouter>
-        </CacheProvider>
+        </CacheProvider>,
       );
-      
+
       const origin = new URL(req.url).origin;
       const response = await fetch(origin);
       const html = await response.text();
 
       // 4. Inject HTML and Data Snapshot
       let ssrHtml = html.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`);
-      
+
       // Inject the cache state for client hydration
       const snapshot = cache.snapshot();
       const hydrationScript = `<script>window.__INITIAL_DATA__ = ${JSON.stringify(snapshot)}</script>`;

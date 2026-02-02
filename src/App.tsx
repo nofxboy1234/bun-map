@@ -24,9 +24,7 @@ export function App() {
       <header>
         <h1>⚡ Bun Router Demo</h1>
       </header>
-      <main>
-        {content}
-      </main>
+      <main>{content}</main>
     </div>
   );
 }

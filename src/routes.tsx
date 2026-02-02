@@ -33,5 +33,5 @@ export const routes: RouteConfig[] = [
 
 // Helper to find a matching route
 export function matchRoute(pathname: string): RouteConfig | undefined {
-  return routes.find(r => r.path === pathname);
+  return routes.find((r) => r.path === pathname);
 }
