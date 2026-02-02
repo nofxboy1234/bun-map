@@ -82,9 +82,11 @@ export const globalCache = AutoHydratedCache();
 
 function AutoHydratedCache() {
   const cache = new SimpleCache();
+
   if (typeof window !== "undefined" && (window as any).__INITIAL_DATA__) {
     cache.restore((window as any).__INITIAL_DATA__);
   }
+
   return cache;
 }
 
@@ -114,8 +116,10 @@ const historyEvent = typeof window !== "undefined" ? new Event("pushstate") : nu
 
 function subscribe(callback: () => void) {
   if (typeof window === "undefined") return () => {};
+
   window.addEventListener("popstate", callback);
   window.addEventListener("pushstate", callback);
+
   return () => {
     window.removeEventListener("popstate", callback);
     window.removeEventListener("pushstate", callback);
@@ -146,12 +150,14 @@ export function useRouter() {
 
   const navigate = (path: string) => {
     if (typeof window === "undefined") return;
+
     window.history.pushState(null, "", path);
     if (historyEvent) window.dispatchEvent(historyEvent);
   };
 
   const replace = (path: string) => {
     if (typeof window === "undefined") return;
+
     window.history.replaceState(null, "", path);
     if (historyEvent) window.dispatchEvent(historyEvent);
   };
