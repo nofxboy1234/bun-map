@@ -3,6 +3,7 @@ import { renderToString } from "react-dom/server";
 import index from "./index.html";
 import { App } from "./App";
 import { ServerRouter, SimpleCache, CacheProvider } from "./simple-router";
+import { matchRoute } from "./routes";
 
 const server = serve({
   routes: {
@@ -12,19 +13,9 @@ const server = serve({
       const url = new URL(req.url);
 
       // 2. Pre-fetch data based on route (Server-Side Data Routing)
-      if (url.pathname === "/" || url.pathname === "/ssr") {
-        await cache.fetch("pokemon-list", async () => {
-          const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=5");
-          return res.json();
-        });
-      } else if (url.pathname === "/pokemon") {
-        const id = url.searchParams.get("id");
-        if (id) {
-          await cache.fetch(`pokemon-${id}`, async () => {
-            const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-            return res.json();
-          });
-        }
+      const route = matchRoute(url.pathname);
+      if (route && route.loadData) {
+        await route.loadData(cache, url);
       }
 
       // 3. Render with the populated cache
