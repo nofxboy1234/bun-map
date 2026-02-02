@@ -4,8 +4,6 @@ import "./index.css";
 const logo = "/src/logo.svg";
 const reactLogo = "/src/react.svg";
 
-console.log("App.tsx evaluating");
-
 if (import.meta.hot) {
   import.meta.hot.accept();
 }
