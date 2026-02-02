@@ -33,10 +33,12 @@ export class SimpleCache {
     // Returns true only if data exists AND is valid
     const entry = this.data.get(key);
     if (!entry) return false;
+
     if (Date.now() > entry.expiry) {
       this.data.delete(key);
       return false;
     }
+
     return true;
   }
 
