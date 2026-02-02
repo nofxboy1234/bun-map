@@ -8,6 +8,7 @@
     "fmt": "oxfmt",
     "tsgo": "bunx --bun tsgo",
     "dev": "bun --hot src/index.tsx",
+    "dev:debug": "bun --inspect src/index.tsx",
     "build": "bun build ./src/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
     "clean": "rm -rf dist && echo 'Cleaned dist.'",
     "start": "NODE_ENV=production bun src/index.tsx"
