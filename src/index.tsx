@@ -1,9 +1,10 @@
 import { serve } from "bun";
 import { renderToString } from "react-dom/server";
-import index from "./index.html";
-import { App } from "./App";
-import { ServerRouter, SimpleCache, CacheProvider } from "./simple-router";
-import { matchRoute } from "./routes";
+import index from "@/index.html";
+import { App } from "@/components/App";
+import { ServerRouter } from "@/router";
+import { SimpleCache, CacheProvider } from "@/cache";
+import { matchRoute } from "@/router/routes";
 
 const server = serve({
   routes: {
@@ -58,9 +59,9 @@ const server = serve({
       return Response.json({ message: `Hello, ${name}!` });
     },
 
-    "/src/:file": async (req) => {
+    "/src/assets/:file": async (req) => {
       const fileName = req.params.file;
-      const filePath = import.meta.dir + "/" + fileName;
+      const filePath = import.meta.dir + "/assets/" + fileName;
       const file = Bun.file(filePath);
 
       if (await file.exists()) {

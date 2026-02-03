@@ -1,6 +1,8 @@
-import { useRouter } from "./simple-router";
-import { matchRoute } from "./routes";
-import "./index.css";
+import { useRouter } from "@/router";
+import { matchRoute } from "@/router/routes";
+import "@/index.css";
+
+const reactLogo = "/src/assets/react.svg";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
@@ -23,6 +25,7 @@ export function App() {
       <header>
         <h1>⚡ Bun Router Demo</h1>
       </header>
+      <img src={reactLogo} alt="react logo" width={"100px"} />
       <main>{content}</main>
     </div>
   );

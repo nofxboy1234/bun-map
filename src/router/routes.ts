@@ -1,5 +1,7 @@
-import { SimpleCache } from "./simple-router";
-import { PokemonList, PokemonDetail, fetchPokemonList, fetchPokemonDetail } from "./pages";
+import { SimpleCache } from "@/cache";
+import { fetchPokemonList, fetchPokemonDetail } from "@/dataFetchers/pokemon";
+import { PokemonList } from "@/components/PokemonList";
+import { PokemonDetail } from "@/components/PokemonDetail";
 
 export type RouteConfig = {
   path: string;

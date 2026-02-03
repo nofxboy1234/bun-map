@@ -7,7 +7,7 @@
 
 import { StrictMode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
-import { App } from "./App";
+import { App } from "@/components/App";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
