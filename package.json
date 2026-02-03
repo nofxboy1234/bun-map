@@ -21,8 +21,8 @@
     "@types/bun": "latest",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@typescript/native-preview": "^7.0.0-dev.20260201.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260202.1",
     "oxfmt": "^0.27.0",
-    "oxlint": "^1.42.0"
+    "oxlint": "^1.43.0"
   }
 }
