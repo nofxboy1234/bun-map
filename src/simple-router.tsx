@@ -1,4 +1,4 @@
-import { useSyncExternalStore, useMemo, createContext, useContext } from "react";
+import { useSyncExternalStore, useMemo, createContext, useContext, useRef } from "react";
 
 // --- 1. The Simple Cache System ---
 
@@ -10,11 +10,21 @@ type CacheEntry<T> = {
 export class SimpleCache {
   private data = new Map<string, CacheEntry<any>>();
   private pending = new Map<string, Promise<any>>();
+  private listeners = new Set<() => void>();
 
   constructor(initialData?: Record<string, CacheEntry<any>>) {
     if (initialData) {
       this.restore(initialData);
     }
+  }
+
+  subscribe(listener: () => void) {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  private notify() {
+    this.listeners.forEach((l) => l());
   }
 
   get(key: string) {
@@ -23,6 +33,7 @@ export class SimpleCache {
 
     if (Date.now() > entry.expiry) {
       this.data.delete(key);
+      this.notify();
       return undefined;
     }
 
@@ -30,33 +41,36 @@ export class SimpleCache {
   }
 
   has(key: string) {
-    // Returns true only if data exists AND is valid
     const entry = this.data.get(key);
     if (!entry) return false;
 
     if (Date.now() > entry.expiry) {
       this.data.delete(key);
+      this.notify();
       return false;
     }
 
     return true;
   }
 
-  // ttl: Time to live in milliseconds (default: 5 minutes)
   async fetch<T>(key: string, fetcher: () => Promise<T>, ttl = 1000 * 60 * 5): Promise<T> {
-    // Check for valid cached data
     if (this.has(key)) {
       return this.data.get(key)!.value;
     }
 
-    // Deduplicate concurrent requests
     if (this.pending.has(key)) return this.pending.get(key);
 
-    const promise = fetcher().then((value) => {
-      this.data.set(key, { value, expiry: Date.now() + ttl });
-      this.pending.delete(key);
-      return value;
-    });
+    const promise = fetcher()
+      .then((value) => {
+        this.data.set(key, { value, expiry: Date.now() + ttl });
+        this.pending.delete(key);
+        this.notify();
+        return value;
+      })
+      .catch((err) => {
+        this.pending.delete(key);
+        throw err;
+      });
 
     this.pending.set(key, promise);
     return promise;
@@ -64,6 +78,7 @@ export class SimpleCache {
 
   invalidate(key: string) {
     this.data.delete(key);
+    this.notify();
   }
 
   snapshot() {
@@ -74,6 +89,7 @@ export class SimpleCache {
     Object.entries(data).forEach(([key, entry]) => {
       this.data.set(key, entry);
     });
+    this.notify();
   }
 }
 
@@ -172,36 +188,60 @@ export function useRouter() {
 }
 
 // --- 3. Link Component ---
-// Wraps navigation and optional data prefetching
 type LinkProps = {
   href: string;
   className?: string;
   children: React.ReactNode;
-  prefetch?: () => Promise<any>; // Optional "fetch-then-navigate" logic
+  prefetch?: () => Promise<any>;
+  prefetchTimeout?: number; // Configurable hover delay
+  prefetchOnHover?: boolean; // Enable/disable hover prefetching
 };
 
-export function Link({ href, className, children, prefetch }: LinkProps) {
+export function Link({
+  href,
+  className,
+  children,
+  prefetch,
+  prefetchTimeout = 50,
+  prefetchOnHover = true,
+}: LinkProps) {
   const { navigate } = useRouter();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault();
-
-    // If there's a prefetch function, wait for it before navigating.
-    // This implements the "Fetch-then-Render" pattern.
     if (prefetch) {
       try {
         await prefetch();
       } catch (err) {
         console.error("Prefetch failed", err);
-        // Optionally handle error or navigate anyway
       }
     }
-
     navigate(href);
   };
 
+  const handleMouseEnter = () => {
+    if (prefetch && prefetchOnHover) {
+      timerRef.current = setTimeout(() => {
+        prefetch().catch(() => {});
+      }, prefetchTimeout);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+  };
+
   return (
-    <a href={href} className={className} onClick={handleClick}>
+    <a
+      href={href}
+      className={className}
+      onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       {children}
     </a>
   );
