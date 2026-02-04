@@ -1,9 +1,11 @@
 import { useRouter } from "@/router";
 import { Link } from "@/router/components/Link";
-import { fetchPokemonDetail } from "@/dataFetchers/pokemon";
+import { fetchPokemonDetail, fetchPokemonList } from "@/dataFetchers/pokemon";
 import { useData } from "@/components/hooks";
+import { useCache } from "@/cache";
 
 export function PokemonDetail() {
+  const cache = useCache();
   const { query } = useRouter();
   const id = query.get("id");
 
@@ -17,7 +19,11 @@ export function PokemonDetail() {
 
   return (
     <div className="card">
-      <Link href="/" className="back-link">
+      <Link
+        href="/"
+        className="back-link"
+        prefetch={() => cache.fetch("pokemon-list", fetchPokemonList, 1000 * 5)}
+      >
         ← Back to List
       </Link>
       <h2>{pokemon.name}</h2>
