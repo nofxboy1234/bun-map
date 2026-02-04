@@ -17,7 +17,7 @@ export function useEffectDepLogger(deps: DependencyList, effectDepsHistory: Depe
   }
 }
 
-export function useData<T>(key: string, fetcher: () => Promise<T>) {
+export function useData<T>(key: string, fetcher: () => Promise<T>, ttl?: number) {
   const cache = useCache();
   const effectDepsHistoryRef = useRef<DependencyList[]>([]);
 
@@ -26,10 +26,12 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
   fetcherRef.current = fetcher;
   const cacheRef = useRef(cache);
   cacheRef.current = cache;
+  const ttlRef = useRef(ttl);
+  ttlRef.current = ttl;
 
   // 1. Subscribe to cache changes using useSyncExternalStore
   const data = useSyncExternalStore(
-    (notify: () => void) => cache.subscribe(notify),
+    (notify: () => void) => cache.subscribe(key, notify),
     () => cache.get(key),
     () => cache.get(key), // Server snapshot
   );
@@ -59,7 +61,7 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
 
     setLoading(true);
     cacheRef.current
-      .fetch(key, fetcherRef.current)
+      .fetch(key, fetcherRef.current, ttlRef.current)
       .catch((err) => {
         setError(err instanceof Error ? err : new Error(String(err)));
       })

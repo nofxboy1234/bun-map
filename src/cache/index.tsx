@@ -10,7 +10,7 @@ type CacheEntry<T> = {
 export class SimpleCache {
   private data = new Map<string, CacheEntry<any>>();
   private pending = new Map<string, Promise<any>>();
-  private listeners = new Set<() => void>();
+  private keyListeners = new Map<string, Set<() => void>>();
 
   constructor(initialData?: Record<string, CacheEntry<any>>) {
     if (initialData) {
@@ -18,13 +18,28 @@ export class SimpleCache {
     }
   }
 
-  subscribe(listener: () => void) {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+  subscribe(key: string, listener: () => void) {
+    if (!this.keyListeners.has(key)) {
+      this.keyListeners.set(key, new Set());
+    }
+    this.keyListeners.get(key)!.add(listener);
+
+    return () => {
+      const listeners = this.keyListeners.get(key);
+      if (listeners) {
+        listeners.delete(listener);
+        if (listeners.size === 0) {
+          this.keyListeners.delete(key);
+        }
+      }
+    };
   }
 
-  private notify() {
-    this.listeners.forEach((l) => l());
+  private notify(key: string) {
+    const listeners = this.keyListeners.get(key);
+    if (listeners) {
+      listeners.forEach((l) => l());
+    }
   }
 
   get(key: string) {
@@ -33,7 +48,7 @@ export class SimpleCache {
 
     if (Date.now() > entry.expiry) {
       this.data.delete(key);
-      this.notify();
+      this.notify(key);
       return undefined;
     }
 
@@ -46,14 +61,14 @@ export class SimpleCache {
 
     if (Date.now() > entry.expiry) {
       this.data.delete(key);
-      this.notify();
+      this.notify(key);
       return false;
     }
 
     return true;
   }
 
-  async fetch<T>(key: string, fetcher: () => Promise<T>, ttl = 1000 * 60 * 5): Promise<T> {
+  async fetch<T>(key: string, fetcher: () => Promise<T>, ttl = 1000 * 5): Promise<T> {
     if (this.has(key)) {
       console.log("return cached data");
       return this.data.get(key)!.value;
@@ -65,7 +80,7 @@ export class SimpleCache {
       .then((value) => {
         this.data.set(key, { value, expiry: Date.now() + ttl });
         this.pending.delete(key);
-        this.notify();
+        this.notify(key);
         return value;
       })
       .catch((err) => {
@@ -79,7 +94,7 @@ export class SimpleCache {
 
   invalidate(key: string) {
     this.data.delete(key);
-    this.notify();
+    this.notify(key);
   }
 
   snapshot() {
@@ -89,8 +104,8 @@ export class SimpleCache {
   restore(data: Record<string, CacheEntry<any>>) {
     Object.entries(data).forEach(([key, entry]) => {
       this.data.set(key, entry);
+      this.notify(key);
     });
-    this.notify();
   }
 }
 

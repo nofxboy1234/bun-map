@@ -25,7 +25,7 @@ export function PokemonList() {
               href={`/pokemon?id=${id}`}
               className="list-item"
               // The Magic: Fetch details BEFORE navigating.
-              prefetch={() => cache.fetch(detailKey, () => fetchPokemonDetail(id), 1000 * 5)}
+              prefetch={() => cache.fetch(detailKey, () => fetchPokemonDetail(id))}
             >
               {p.name}
             </Link>

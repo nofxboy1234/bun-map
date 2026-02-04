@@ -22,7 +22,7 @@ export function PokemonDetail() {
       <Link
         href="/"
         className="back-link"
-        prefetch={() => cache.fetch("pokemon-list", fetchPokemonList, 1000 * 5)}
+        prefetch={() => cache.fetch("pokemon-list", fetchPokemonList)}
       >
         ← Back to List
       </Link>
