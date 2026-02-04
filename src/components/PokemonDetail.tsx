@@ -2,9 +2,6 @@ import { useRouter } from "@/router";
 import { Link } from "@/router/components/Link";
 import { fetchPokemonDetail } from "@/dataFetchers/pokemon";
 import { useData } from "@/components/hooks";
-import type { DependencyList } from "react";
-
-const effectDepsHistory: DependencyList[] = [];
 
 export function PokemonDetail() {
   const { query } = useRouter();
@@ -13,11 +10,7 @@ export function PokemonDetail() {
   if (!id) return <div>Missing ID</div>;
 
   const cacheKey = `pokemon-${id}`;
-  const {
-    data: pokemon,
-    error,
-    isLoading,
-  } = useData(cacheKey, () => fetchPokemonDetail(id), effectDepsHistory);
+  const { data: pokemon, error, isLoading } = useData(cacheKey, () => fetchPokemonDetail(id));
 
   if (error) return <div className="error">Error: {error.message}</div>;
   if (isLoading || !pokemon) return <div className="loading">Loading details...</div>;
