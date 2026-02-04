@@ -1,7 +1,22 @@
-import { useState, useEffect, useRef, useSyncExternalStore } from "react";
+import { useState, useEffect, useRef, useSyncExternalStore, type DependencyList } from "react";
 import { useCache } from "@/cache";
 
-const effectDeps: any[] = [];
+const effectDeps: DependencyList[] = [];
+
+export function useEffectDepLogger(deps: DependencyList) {
+  console.log(deps);
+  effectDeps.push(deps);
+
+  if (effectDeps.length > 1) {
+    const prev = effectDeps[effectDeps.length - 2]!;
+    const curr = effectDeps[effectDeps.length - 1]!;
+
+    console.log(`key dep changed?: ${!Object.is(curr[0], prev[0])}`);
+    console.log(`data dep changed?: ${!Object.is(curr[1], prev[1])}`);
+    console.log(`fetcher dep changed?: ${!Object.is(curr[2], prev[2])}`);
+    console.log(`cache dep changed?: ${!Object.is(curr[3], prev[3])}`);
+  }
+}
 
 export function useData<T>(key: string, fetcher: () => Promise<T>) {
   const cache = useCache();
@@ -38,23 +53,7 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
       });
   }, [key, data, fetcher, cache]);
 
-  console.log([key, data, fetcher, cache]);
-  effectDeps.push([key, data, fetcher, cache]);
-
-  if (effectDeps.length > 1) {
-    console.log(
-      `key dep changed?: ${!Object.is(effectDeps[effectDeps.length - 1][0], effectDeps[effectDeps.length - 2][0])}`,
-    );
-    console.log(
-      `data dep changed?: ${!Object.is(effectDeps[effectDeps.length - 1][1], effectDeps[effectDeps.length - 2][1])}`,
-    );
-    console.log(
-      `fetcher dep changed?: ${!Object.is(effectDeps[effectDeps.length - 1][2], effectDeps[effectDeps.length - 2][2])}`,
-    );
-    console.log(
-      `cache dep changed?: ${!Object.is(effectDeps[effectDeps.length - 1][3], effectDeps[effectDeps.length - 2][3])}`,
-    );
-  }
+  useEffectDepLogger([key, data, fetcher, cache]);
 
   return { data, error, isLoading: loading };
 }
