@@ -64,6 +64,35 @@ header h1 {
   min-width: 300px;
 }
 
+.app-container.navigating {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: #3b82f6;
+  width: 100%;
+  z-index: 1000;
+  animation: loading-bar 1s infinite linear;
+  transform-origin: 0% 50%;
+}
+
+@keyframes loading-bar {
+  0% {
+    transform: scaleX(0);
+  }
+  50% {
+    transform: scaleX(0.5);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
 .pixel-art {
   width: 150px;
   height: 150px;

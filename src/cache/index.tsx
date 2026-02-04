@@ -48,7 +48,6 @@ export class SimpleCache {
 
     if (Date.now() > entry.expiry) {
       this.data.delete(key);
-      this.notify(key);
       return undefined;
     }
 
@@ -61,7 +60,6 @@ export class SimpleCache {
 
     if (Date.now() > entry.expiry) {
       this.data.delete(key);
-      this.notify(key);
       return false;
     }
 

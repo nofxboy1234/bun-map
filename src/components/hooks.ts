@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useSyncExternalStore, type DependencyList } from "react";
+import { useRef, useSyncExternalStore, type DependencyList } from "react";
 import { useCache } from "@/cache";
 
 export function useEffectDepLogger(deps: DependencyList, effectDepsHistory: DependencyList[]) {
@@ -17,62 +17,28 @@ export function useEffectDepLogger(deps: DependencyList, effectDepsHistory: Depe
   }
 }
 
-export function useData<T>(key: string, fetcher: () => Promise<T>, ttl?: number) {
+/**
+ * useData now acts as a passive consumer of the cache.
+ * Data is expected to be pre-loaded by the Router or a Prefetch action.
+ */
+export function useData<T>(key: string) {
   const cache = useCache();
   const effectDepsHistoryRef = useRef<DependencyList[]>([]);
 
-  // Stable references for unstable props
-  const fetcherRef = useRef(fetcher);
-  fetcherRef.current = fetcher;
-  const cacheRef = useRef(cache);
-  cacheRef.current = cache;
-  const ttlRef = useRef(ttl);
-  ttlRef.current = ttl;
-
-  // 1. Subscribe to cache changes using useSyncExternalStore
+  // Subscribe to cache changes for this specific key
   const data = useSyncExternalStore(
     (notify: () => void) => cache.subscribe(key, notify),
-    () => cache.get(key),
-    () => cache.get(key), // Server snapshot
+    () => cache.get(key) as T | undefined,
+    () => cache.get(key) as T | undefined, // Server snapshot
   );
 
-  const [error, setError] = useState<Error | null>(null);
-  const [loading, setLoading] = useState(!data);
-  const fetchedKeyRef = useRef<string | null>(null);
-
+  // Optional logging for debugging render cycles
   useEffectDepLogger([key, data], effectDepsHistoryRef.current);
 
-  useEffect(() => {
-    console.log("* useEffect *");
-    // If we have data, we're not loading (unless we want to implement background refresh)
-    if (data) {
-      console.log("has data: not fetching");
-      setLoading(false);
-      return;
-    }
-
-    if (fetchedKeyRef.current === key) {
-      console.log("fetch already in progress: not fetching");
-      return;
-    }
-
-    console.log("no data: fetching!");
-    fetchedKeyRef.current = key;
-
-    setLoading(true);
-    cacheRef.current
-      .fetch(key, fetcherRef.current, ttlRef.current)
-      .catch((err) => {
-        setError(err instanceof Error ? err : new Error(String(err)));
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-
-    return () => {
-      console.log("* useEffect cleanup *");
-    };
-  }, [key, data]);
-
-  return { data, error, isLoading: loading };
+  return {
+    data,
+    isLoading: !data,
+    // Note: error handling should now ideally be handled at the router level
+    // or by checking if data is missing after navigation completes.
+  };
 }

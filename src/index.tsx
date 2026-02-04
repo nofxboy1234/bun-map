@@ -1,49 +1,76 @@
 import { serve } from "bun";
 import { renderToString } from "react-dom/server";
-import index from "@/index.html";
 import { App } from "@/components/App";
 import { ServerRouter } from "@/router";
 import { SimpleCache, CacheProvider } from "@/cache";
 import { matchRoute } from "@/router/routes";
 
+const indexHtmlFile = Bun.file(import.meta.dir + "/index.html");
+
+// 1. Bundle the frontend into memory
+const build = await Bun.build({
+  entrypoints: ["./src/frontend.tsx"],
+  target: "browser",
+  splitting: false,
+});
+
+const frontendBundle = build.outputs.find((o) => o.kind === "entry-point");
+const frontendCss = build.outputs.find((o) => o.kind === "asset" && o.path?.endsWith(".css"));
+
+async function renderSSR(req: Request) {
+  const cache = new SimpleCache();
+  const url = new URL(req.url);
+
+  const route = matchRoute(url.pathname);
+  if (!route) return null;
+
+  if (route.loadData) {
+    await route.loadData(cache, url);
+  }
+
+  const appHtml = renderToString(
+    <CacheProvider cache={cache}>
+      <ServerRouter url={req.url}>
+        <App />
+      </ServerRouter>
+    </CacheProvider>,
+  );
+
+  const html = await indexHtmlFile.text();
+
+  // Inject HTML, Data Snapshot, and fix the script tag to point to our bundle
+  let ssrHtml = html
+    .replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`)
+    .replace(
+      '<script type="module" src="./frontend.tsx"></script>',
+      '<script type="module" src="/frontend.js"></script>',
+    );
+
+  // Inject the CSS link
+  ssrHtml = ssrHtml.replace("</head>", '  <link rel="stylesheet" href="/index.css" />\n  </head>');
+
+  const snapshot = cache.snapshot();
+  const hydrationScript = `<script>
+    window.__INITIAL_DATA__ = ${JSON.stringify(snapshot)};
+    window.__SSR_URL__ = "${req.url}";
+  </script>`;
+  ssrHtml = ssrHtml.replace("</body>", `${hydrationScript}</body>`);
+
+  return new Response(ssrHtml, {
+    headers: { "Content-Type": "text/html" },
+  });
+}
+
 const server = serve({
   routes: {
-    "/ssr": async (req) => {
-      // 1. Create a fresh cache for this request
-      const cache = new SimpleCache();
-      const url = new URL(req.url);
+    "/favicon.ico": Bun.file(import.meta.dir + "/assets/logo.svg"),
+    "/frontend.js": new Response(frontendBundle, {
+      headers: { "Content-Type": "text/javascript" },
+    }),
 
-      // 2. Pre-fetch data based on route (Server-Side Data Routing)
-      const route = matchRoute(url.pathname);
-      if (route && route.loadData) {
-        await route.loadData(cache, url);
-      }
-
-      // 3. Render with the populated cache
-      const appHtml = renderToString(
-        <CacheProvider cache={cache}>
-          <ServerRouter url={req.url}>
-            <App />
-          </ServerRouter>
-        </CacheProvider>,
-      );
-
-      const origin = new URL(req.url).origin;
-      const response = await fetch(origin);
-      const html = await response.text();
-
-      // 4. Inject HTML and Data Snapshot
-      let ssrHtml = html.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`);
-
-      // Inject the cache state for client hydration
-      const snapshot = cache.snapshot();
-      const hydrationScript = `<script>window.__INITIAL_DATA__ = ${JSON.stringify(snapshot)}</script>`;
-      ssrHtml = ssrHtml.replace("</body>", `${hydrationScript}</body>`);
-
-      return new Response(ssrHtml, {
-        headers: { "Content-Type": "text/html" },
-      });
-    },
+    "/index.css": new Response(frontendCss, {
+      headers: { "Content-Type": "text/css" },
+    }),
 
     "/api/hello": {
       async GET(_req) {
@@ -59,7 +86,7 @@ const server = serve({
       return Response.json({ message: `Hello, ${name}!` });
     },
 
-    "/src/assets/:file": async (req) => {
+    "/assets/:file": async (req) => {
       const fileName = req.params.file;
       const filePath = import.meta.dir + "/assets/" + fileName;
       const file = Bun.file(filePath);
@@ -71,7 +98,12 @@ const server = serve({
       return new Response("Not Found", { status: 404 });
     },
 
-    "/*": index,
+    "/*": async (req) => {
+      const ssrResponse = await renderSSR(req);
+      if (ssrResponse) return ssrResponse;
+
+      return new Response("Not Found", { status: 404 });
+    },
   },
 
   development: process.env.NODE_ENV !== "production" && {
@@ -81,4 +113,3 @@ const server = serve({
 });
 
 console.log(`🚀 Server running at ${server.url}`);
-console.log(`🔗 SSR available at ${server.url}ssr`);

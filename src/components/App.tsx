@@ -1,15 +1,23 @@
-import { useRouter } from "@/router";
+import { useRouter, RouterProvider } from "@/router";
 import { matchRoute } from "@/router/routes";
 import "@/index.css";
 
-const reactLogo = "/src/assets/react.svg";
+const reactLogo = "/assets/react.svg";
 
 if (import.meta.hot) {
   import.meta.hot.accept();
 }
 
 export function App() {
-  const { path } = useRouter();
+  return (
+    <RouterProvider matchRoute={matchRoute}>
+      <AppContent />
+    </RouterProvider>
+  );
+}
+
+function AppContent() {
+  const { path, isNavigating } = useRouter();
   const route = matchRoute(path);
 
   let content;
@@ -21,9 +29,10 @@ export function App() {
   }
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${isNavigating ? "navigating" : ""}`}>
       <header>
         <h1>⚡ Bun Router Demo</h1>
+        {isNavigating && <div className="loading-bar" />}
       </header>
       <img src={reactLogo} alt="react logo" width={"100px"} />
       <main>{content}</main>

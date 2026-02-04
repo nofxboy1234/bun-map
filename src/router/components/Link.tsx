@@ -1,11 +1,12 @@
 import { useRef } from "react";
 import { useRouter } from "@/router";
+import { matchRoute } from "@/router/routes";
+import { useCache } from "@/cache";
 
 type LinkProps = {
   href: string;
   className?: string;
   children: React.ReactNode;
-  prefetch?: () => Promise<any>;
   prefetchTimeout?: number; // Configurable hover delay
   prefetchOnHover?: boolean; // Enable/disable hover prefetching
 };
@@ -14,29 +15,28 @@ export function Link({
   href,
   className,
   children,
-  prefetch,
   prefetchTimeout = 50,
   prefetchOnHover = true,
 }: LinkProps) {
-  const { navigate } = useRouter();
+  const { navigate, url } = useRouter();
+  const cache = useCache();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleClick = async (e: React.MouseEvent) => {
+  const isActive = url.pathname === href || (href !== "/" && url.pathname.startsWith(href));
+
+  const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (prefetch) {
-      try {
-        await prefetch();
-      } catch (err) {
-        console.error("Prefetch failed", err);
-      }
-    }
     navigate(href);
   };
 
   const handleMouseEnter = () => {
-    if (prefetch && prefetchOnHover) {
+    if (prefetchOnHover) {
       timerRef.current = setTimeout(() => {
-        prefetch().catch(() => {});
+        const targetUrl = new URL(href, window.location.origin);
+        const route = matchRoute(targetUrl.pathname);
+        if (route?.loadData) {
+          route.loadData(cache, targetUrl).catch(() => {});
+        }
       }, prefetchTimeout);
     }
   };
@@ -50,7 +50,7 @@ export function Link({
   return (
     <a
       href={href}
-      className={className}
+      className={`${className} ${isActive ? "active" : ""}`}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
