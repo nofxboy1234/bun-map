@@ -13,17 +13,18 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
 
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(!data);
-  const fetchedRef = useRef(false);
+  const fetchedKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
+    console.log(`loading: ${loading}`);
     // If we have data, we're not loading (unless we want to implement background refresh)
     if (data) {
       setLoading(false);
       return;
     }
 
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
+    if (fetchedKeyRef.current === key) return;
+    fetchedKeyRef.current = key;
 
     setLoading(true);
     cache
