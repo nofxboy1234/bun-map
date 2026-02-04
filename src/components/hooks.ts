@@ -7,14 +7,19 @@ export function useEffectDepLogger(deps: DependencyList) {
   console.log(deps);
   effectDeps.push(deps);
 
-  if (effectDeps.length > 1) {
-    const prev = effectDeps[effectDeps.length - 2]!;
-    const curr = effectDeps[effectDeps.length - 1]!;
+  const prev = effectDeps[effectDeps.length - 2]!;
+  const curr = effectDeps[effectDeps.length - 1]!;
 
+  if (effectDeps.length > 1) {
     console.log(`key dep changed?: ${!Object.is(curr[0], prev[0])}`);
     console.log(`data dep changed?: ${!Object.is(curr[1], prev[1])}`);
     console.log(`fetcher dep changed?: ${!Object.is(curr[2], prev[2])}`);
     console.log(`cache dep changed?: ${!Object.is(curr[3], prev[3])}`);
+  } else {
+    console.log("key dep init");
+    console.log("data dep init");
+    console.log("fetcher dep init");
+    console.log("cache dep init");
   }
 }
 
@@ -33,6 +38,7 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
   const fetchedKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
+    console.log("useEffect");
     // If we have data, we're not loading (unless we want to implement background refresh)
     if (data) {
       setLoading(false);
