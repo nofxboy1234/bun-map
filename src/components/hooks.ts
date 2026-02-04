@@ -57,6 +57,10 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
       .finally(() => {
         setLoading(false);
       });
+
+    return () => {
+      console.log("useEffect cleanup");
+    };
   }, [key, data, fetcher, cache]);
 
   useEffectDepLogger([key, data, fetcher, cache]);
