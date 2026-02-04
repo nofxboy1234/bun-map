@@ -11,19 +11,21 @@ export function useEffectDepLogger(deps: DependencyList, effectDepsHistory: Depe
   if (effectDepsHistory.length > 1) {
     console.log(`key dep changed?: ${!Object.is(curr[0], prev[0])}`);
     console.log(`data dep changed?: ${!Object.is(curr[1], prev[1])}`);
-    console.log(`fetcher dep changed?: ${!Object.is(curr[2], prev[2])}`);
-    console.log(`cache dep changed?: ${!Object.is(curr[3], prev[3])}`);
   } else {
     console.log("key dep init");
     console.log("data dep init");
-    console.log("fetcher dep init");
-    console.log("cache dep init");
   }
 }
 
 export function useData<T>(key: string, fetcher: () => Promise<T>) {
   const cache = useCache();
   const effectDepsHistoryRef = useRef<DependencyList[]>([]);
+
+  // Stable references for unstable props
+  const fetcherRef = useRef(fetcher);
+  fetcherRef.current = fetcher;
+  const cacheRef = useRef(cache);
+  cacheRef.current = cache;
 
   // 1. Subscribe to cache changes using useSyncExternalStore
   const data = useSyncExternalStore(
@@ -36,7 +38,7 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
   const [loading, setLoading] = useState(!data);
   const fetchedKeyRef = useRef<string | null>(null);
 
-  useEffectDepLogger([key, data, fetcher, cache], effectDepsHistoryRef.current);
+  useEffectDepLogger([key, data], effectDepsHistoryRef.current);
 
   useEffect(() => {
     console.log("* useEffect *");
@@ -48,7 +50,7 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
     }
 
     if (fetchedKeyRef.current === key) {
-      console.log("fetch in progress: not fetching");
+      console.log("fetch already in progress: not fetching");
       return;
     }
 
@@ -56,8 +58,8 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
     fetchedKeyRef.current = key;
 
     setLoading(true);
-    cache
-      .fetch(key, fetcher)
+    cacheRef.current
+      .fetch(key, fetcherRef.current)
       .catch((err) => {
         setError(err instanceof Error ? err : new Error(String(err)));
       })
@@ -68,7 +70,7 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
     return () => {
       console.log("* useEffect cleanup *");
     };
-  }, [key, data, fetcher, cache]);
+  }, [key, data]);
 
   return { data, error, isLoading: loading };
 }
