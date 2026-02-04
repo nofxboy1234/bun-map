@@ -2,11 +2,14 @@ import { Link } from "@/router/components/Link";
 import { useCache } from "@/cache";
 import { fetchPokemonDetail, fetchPokemonList } from "@/dataFetchers/pokemon";
 import { useData } from "@/components/hooks";
+import type { DependencyList } from "react";
+
+const effectDepsHistory: DependencyList[] = [];
 
 export function PokemonList() {
   const cache = useCache();
   const cacheKey = "pokemon-list";
-  const { data: list, error, isLoading } = useData(cacheKey, fetchPokemonList);
+  const { data: list, error, isLoading } = useData(cacheKey, fetchPokemonList, effectDepsHistory);
 
   if (error) return <div className="error">Error: {error.message}</div>;
   if (isLoading || !list) return <div className="loading">Loading list...</div>;

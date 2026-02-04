@@ -1,16 +1,14 @@
 import { useState, useEffect, useRef, useSyncExternalStore, type DependencyList } from "react";
 import { useCache } from "@/cache";
 
-const effectDeps: DependencyList[] = [];
-
-export function useEffectDepLogger(deps: DependencyList) {
+export function useEffectDepLogger(deps: DependencyList, effectDepsHistory: DependencyList[]) {
   console.log(deps);
-  effectDeps.push(deps);
+  effectDepsHistory.push(deps);
 
-  const prev = effectDeps[effectDeps.length - 2]!;
-  const curr = effectDeps[effectDeps.length - 1]!;
+  const prev = effectDepsHistory[effectDepsHistory.length - 2]!;
+  const curr = effectDepsHistory[effectDepsHistory.length - 1]!;
 
-  if (effectDeps.length > 1) {
+  if (effectDepsHistory.length > 1) {
     console.log(`key dep changed?: ${!Object.is(curr[0], prev[0])}`);
     console.log(`data dep changed?: ${!Object.is(curr[1], prev[1])}`);
     console.log(`fetcher dep changed?: ${!Object.is(curr[2], prev[2])}`);
@@ -23,7 +21,11 @@ export function useEffectDepLogger(deps: DependencyList) {
   }
 }
 
-export function useData<T>(key: string, fetcher: () => Promise<T>) {
+export function useData<T>(
+  key: string,
+  fetcher: () => Promise<T>,
+  effectDepsHistory: DependencyList[],
+) {
   const cache = useCache();
 
   // 1. Subscribe to cache changes using useSyncExternalStore
@@ -37,17 +39,23 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
   const [loading, setLoading] = useState(!data);
   const fetchedKeyRef = useRef<string | null>(null);
 
-  useEffectDepLogger([key, data, fetcher, cache]);
+  useEffectDepLogger([key, data, fetcher, cache], effectDepsHistory);
 
   useEffect(() => {
     console.log("* useEffect *");
     // If we have data, we're not loading (unless we want to implement background refresh)
     if (data) {
+      console.log("has data: not fetching");
       setLoading(false);
       return;
     }
 
-    if (fetchedKeyRef.current === key) return;
+    if (fetchedKeyRef.current === key) {
+      console.log("fetch in progress: not fetching");
+      return;
+    }
+
+    console.log("no data: fetching!");
     fetchedKeyRef.current = key;
 
     setLoading(true);
