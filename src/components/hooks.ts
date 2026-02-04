@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import { useCache } from "@/cache";
 
+const effectDeps: any[] = [];
+
 export function useData<T>(key: string, fetcher: () => Promise<T>) {
   const cache = useCache();
 
@@ -16,7 +18,6 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
   const fetchedKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
-    console.log(`loading: ${loading}`);
     // If we have data, we're not loading (unless we want to implement background refresh)
     if (data) {
       setLoading(false);
@@ -36,6 +37,24 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
         setLoading(false);
       });
   }, [key, data, fetcher, cache]);
+
+  console.log([key, data, fetcher, cache]);
+  effectDeps.push([key, data, fetcher, cache]);
+
+  if (effectDeps.length > 1) {
+    console.log(
+      `key dep changed?: ${!Object.is(effectDeps[effectDeps.length - 1][0], effectDeps[effectDeps.length - 2][0])}`,
+    );
+    console.log(
+      `data dep changed?: ${!Object.is(effectDeps[effectDeps.length - 1][1], effectDeps[effectDeps.length - 2][1])}`,
+    );
+    console.log(
+      `fetcher dep changed?: ${!Object.is(effectDeps[effectDeps.length - 1][2], effectDeps[effectDeps.length - 2][2])}`,
+    );
+    console.log(
+      `cache dep changed?: ${!Object.is(effectDeps[effectDeps.length - 1][3], effectDeps[effectDeps.length - 2][3])}`,
+    );
+  }
 
   return { data, error, isLoading: loading };
 }
