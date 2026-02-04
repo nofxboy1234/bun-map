@@ -37,8 +37,10 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
   const [loading, setLoading] = useState(!data);
   const fetchedKeyRef = useRef<string | null>(null);
 
+  useEffectDepLogger([key, data, fetcher, cache]);
+
   useEffect(() => {
-    console.log("useEffect");
+    console.log("* useEffect *");
     // If we have data, we're not loading (unless we want to implement background refresh)
     if (data) {
       setLoading(false);
@@ -59,11 +61,9 @@ export function useData<T>(key: string, fetcher: () => Promise<T>) {
       });
 
     return () => {
-      console.log("useEffect cleanup");
+      console.log("* useEffect cleanup *");
     };
   }, [key, data, fetcher, cache]);
-
-  useEffectDepLogger([key, data, fetcher, cache]);
 
   return { data, error, isLoading: loading };
 }
