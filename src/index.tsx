@@ -13,6 +13,7 @@ const build = await Bun.build({
   target: "browser",
   splitting: false,
   sourcemap: "inline",
+  minify: true,
 });
 
 const frontendBundle = build.outputs.find((o) => o.kind === "entry-point");
