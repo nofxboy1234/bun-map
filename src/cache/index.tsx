@@ -68,7 +68,6 @@ export class SimpleCache {
 
   async fetch<T>(key: string, fetcher: () => Promise<T>, ttl = 1000 * 5): Promise<T> {
     if (this.has(key)) {
-      console.log("return cached data");
       return this.data.get(key)!.value;
     }
 
