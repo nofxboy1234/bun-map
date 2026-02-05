@@ -11,8 +11,7 @@
     "dev:debug": "bun --inspect src/index.tsx",
     "build": "bun build ./src/index.html --outdir=dist --sourcemap --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*'",
     "clean": "rm -rf dist && echo 'Cleaned dist.'",
-    "start": "NODE_ENV=production bun src/index.tsx",
-    "start:debug": "NODE_ENV=production bun --inspect src/index.tsx"
+    "start": "NODE_ENV=production bun src/index.tsx"
   },
   "dependencies": {
     "react": "^19",
