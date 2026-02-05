@@ -12,6 +12,7 @@ const build = await Bun.build({
   entrypoints: ["./src/frontend.tsx"],
   target: "browser",
   splitting: false,
+  sourcemap: "inline",
 });
 
 const frontendBundle = build.outputs.find((o) => o.kind === "entry-point");
