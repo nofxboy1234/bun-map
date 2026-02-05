@@ -134,6 +134,3 @@ export function CacheProvider({
 export function useCache() {
   return useContext(CacheContext);
 }
-
-// For backward compatibility / direct usage outside React
-export const Cache = globalCache;
