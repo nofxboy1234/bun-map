@@ -13,7 +13,7 @@ async function buildFrontend() {
     entrypoints: ["./src/frontend.tsx"],
     target: "browser",
     splitting: false,
-    sourcemap: "inline",
+    sourcemap: process.env.NODE_ENV === "production" ? "none" : "inline",
     minify: process.env.NODE_ENV === "production",
   });
 
