@@ -7,27 +7,37 @@ import { matchRoute } from "@/router/routes";
 
 const indexHtmlFile = Bun.file(import.meta.dir + "/index.html");
 
-// 1. Bundle the frontend into memory
-const build = await Bun.build({
-  entrypoints: ["./src/frontend.tsx"],
-  target: "browser",
-  splitting: false,
-  sourcemap: "inline",
-  minify: true,
-});
+// Bundle the frontend logic
+async function buildFrontend() {
+  const build = await Bun.build({
+    entrypoints: ["./src/frontend.tsx"],
+    target: "browser",
+    splitting: false,
+    sourcemap: "inline",
+    minify: process.env.NODE_ENV === "production",
+  });
 
-const frontendBundle = build.outputs.find((o) => o.kind === "entry-point");
-const frontendCss = build.outputs.find((o) => o.kind === "asset" && o.path?.endsWith(".css"));
+  return {
+    js: build.outputs.find((o) => o.kind === "entry-point"),
+    css: build.outputs.find((o) => o.kind === "asset" && o.path?.endsWith(".css")),
+  };
+}
+
+// In production, cache the build once. In dev, we rebuild on request.
+let prodAssets: { js: any; css: any } | null = null;
+if (process.env.NODE_ENV === "production") {
+  prodAssets = await buildFrontend();
+}
 
 async function renderSSR(req: Request) {
   const cache = new SimpleCache();
   const url = new URL(req.url);
 
-  const route = matchRoute(url.pathname);
-  if (!route) return null;
+  const match = matchRoute(url.pathname);
+  if (!match) return null;
 
-  if (route.loadData) {
-    await route.loadData(cache, url);
+  if (match.route.loadData) {
+    await match.route.loadData(cache, match.params, url);
   }
 
   const appHtml = renderToString(
@@ -66,13 +76,19 @@ async function renderSSR(req: Request) {
 const server = serve({
   routes: {
     "/favicon.ico": Bun.file(import.meta.dir + "/assets/logo.svg"),
-    "/frontend.js": new Response(frontendBundle, {
-      headers: { "Content-Type": "text/javascript" },
-    }),
+    "/frontend.js": async () => {
+      const assets = process.env.NODE_ENV === "production" ? prodAssets : await buildFrontend();
+      return new Response(assets?.js, {
+        headers: { "Content-Type": "text/javascript" },
+      });
+    },
 
-    "/index.css": new Response(frontendCss, {
-      headers: { "Content-Type": "text/css" },
-    }),
+    "/index.css": async () => {
+      const assets = process.env.NODE_ENV === "production" ? prodAssets : await buildFrontend();
+      return new Response(assets?.css, {
+        headers: { "Content-Type": "text/css" },
+      });
+    },
 
     "/api/hello": {
       async GET(_req) {

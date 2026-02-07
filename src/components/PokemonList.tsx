@@ -15,7 +15,7 @@ export function PokemonList() {
           const id = p.url.split("/").filter(Boolean).pop();
 
           return (
-            <Link key={id} href={`/pokemon?id=${id}`} className="list-item">
+            <Link key={id} href={`/pokemon/${id}`} className="list-item">
               {p.name}
             </Link>
           );

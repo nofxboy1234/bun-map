@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useRef,
 } from "react";
 import { SimpleCache, globalCache } from "@/cache";
 import type { RouteConfig } from "./routes";
@@ -31,6 +32,8 @@ type RouterContextType = {
   isNavigating: boolean;
   navigate: (path: string) => Promise<void>;
   url: URL;
+  route: RouteConfig | undefined;
+  params: Record<string, string>;
 };
 
 const RouterContext = createContext<RouterContextType | null>(null);
@@ -44,11 +47,12 @@ export function RouterProvider({
   cache = globalCache,
 }: {
   children: React.ReactNode;
-  matchRoute: (path: string) => RouteConfig | undefined;
+  matchRoute: (path: string) => { route: RouteConfig; params: Record<string, string> } | undefined;
   cache?: SimpleCache;
 }) {
   const serverUrl = useContext(ServerContext);
   const [isNavigating, setIsNavigating] = useState(false);
+  const isFirstRender = useRef(true);
 
   // Uses useSyncExternalStore to subscribe to URL changes efficiently
   const urlString = useSyncExternalStore(subscribe, getSnapshot, () => {
@@ -60,17 +64,18 @@ export function RouterProvider({
   });
 
   const url = useMemo(() => new URL(urlString), [urlString]);
+  const match = useMemo(() => matchRoute(url.pathname), [url.pathname, matchRoute]);
 
   const navigate = async (path: string) => {
     if (typeof window === "undefined") return;
 
     const targetUrl = new URL(path, window.location.origin);
-    const route = matchRoute(targetUrl.pathname);
+    const targetMatch = matchRoute(targetUrl.pathname);
 
     setIsNavigating(true);
     try {
-      if (route?.loadData) {
-        await route.loadData(cache, targetUrl);
+      if (targetMatch?.route.loadData) {
+        await targetMatch.route.loadData(cache, targetMatch.params, targetUrl);
       }
     } finally {
       setIsNavigating(false);
@@ -85,28 +90,33 @@ export function RouterProvider({
       isNavigating,
       navigate,
       url,
+      route: match?.route,
+      params: match?.params || {},
     }),
-    [isNavigating, url],
+    [isNavigating, url, match],
   );
 
   // Handle Initial Load and Popstate (Back/Forward)
   useEffect(() => {
     const handleNavigation = async () => {
       const currentUrl = new URL(window.location.href);
-      const route = matchRoute(currentUrl.pathname);
+      const currentMatch = matchRoute(currentUrl.pathname);
 
-      if (route?.loadData) {
+      if (currentMatch?.route.loadData) {
         setIsNavigating(true);
         try {
-          await route.loadData(cache, currentUrl);
+          await currentMatch.route.loadData(cache, currentMatch.params, currentUrl);
         } finally {
           setIsNavigating(false);
         }
       }
     };
 
-    // Trigger on mount (refresh)
-    handleNavigation();
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+    } else {
+      handleNavigation();
+    }
 
     window.addEventListener("popstate", handleNavigation);
     return () => window.removeEventListener("popstate", handleNavigation);
@@ -136,6 +146,8 @@ export function useRouter() {
       query: url.searchParams,
       isNavigating: false,
       navigate: async () => {},
+      route: undefined,
+      params: {},
     };
   }
 
@@ -143,5 +155,7 @@ export function useRouter() {
     ...context,
     path: context.url.pathname,
     query: context.url.searchParams,
+    route: context.route,
+    params: context.params,
   };
 }

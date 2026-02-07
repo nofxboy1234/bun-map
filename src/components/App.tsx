@@ -17,12 +17,13 @@ export function App() {
 }
 
 function AppContent() {
-  const { path, isNavigating } = useRouter();
-  const route = matchRoute(path);
+  const { isNavigating, route } = useRouter();
 
   let content;
+
   if (route) {
     const Component = route.component;
+
     content = <Component />;
   } else {
     content = <div>Not Found</div>;

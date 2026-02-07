@@ -3,8 +3,8 @@ import { Link } from "@/router/components/Link";
 import { useData } from "@/components/hooks";
 
 export function PokemonDetail() {
-  const { query } = useRouter();
-  const id = query.get("id");
+  const { params } = useRouter();
+  const id = params.id;
 
   if (!id) return <div>Missing ID</div>;
 

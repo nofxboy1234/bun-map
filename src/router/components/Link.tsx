@@ -33,9 +33,9 @@ export function Link({
     if (prefetchOnHover) {
       timerRef.current = setTimeout(() => {
         const targetUrl = new URL(href, window.location.origin);
-        const route = matchRoute(targetUrl.pathname);
-        if (route?.loadData) {
-          route.loadData(cache, targetUrl).catch(() => {});
+        const match = matchRoute(targetUrl.pathname);
+        if (match?.route.loadData) {
+          match.route.loadData(cache, match.params, targetUrl).catch(() => {});
         }
       }, prefetchTimeout);
     }
