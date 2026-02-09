@@ -6,7 +6,7 @@
  */
 
 import { StrictMode } from "react";
-import { createRoot, hydrateRoot } from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import { App } from "@/components/App";
 
 const elem = document.getElementById("root")!;
@@ -16,20 +16,11 @@ const app = (
   </StrictMode>
 );
 
-let root;
-
-if (import.meta.hot && import.meta.hot.data.root) {
-  root = import.meta.hot.data.root;
+if (import.meta.hot) {
+  // With hot module reloading, `import.meta.hot.data` is persisted.
+  const root = (import.meta.hot.data.root ??= createRoot(elem));
   root.render(app);
 } else {
-  if (elem.hasChildNodes()) {
-    root = hydrateRoot(elem, app);
-  } else {
-    root = createRoot(elem);
-    root.render(app);
-  }
-
-  if (import.meta.hot) {
-    import.meta.hot.data.root = root;
-  }
+  // The hot module reloading API is not available in production.
+  createRoot(elem).render(app);
 }
