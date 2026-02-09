@@ -4,10 +4,6 @@ import "@/index.css";
 
 const reactLogo = "/assets/react.svg";
 
-if (import.meta.hot) {
-  import.meta.hot.accept();
-}
-
 export function App() {
   return (
     <RouterProvider matchRoute={matchRoute}>

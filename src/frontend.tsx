@@ -9,10 +9,6 @@ import { StrictMode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { App } from "@/components/App";
 
-if (import.meta.hot) {
-  import.meta.hot.accept();
-}
-
 const elem = document.getElementById("root")!;
 const app = (
   <StrictMode>
