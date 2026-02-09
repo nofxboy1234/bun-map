@@ -42,19 +42,6 @@ async function renderSSR(req: Request) {
 
 const server = serve({
   routes: {
-    // "/api/hello": {
-    //   async GET(_req) {
-    //     return Response.json({ message: "Hello, world!", method: "GET" });
-    //   },
-    //   async PUT(_req) {
-    //     return Response.json({ message: "Hello, world!", method: "PUT" });
-    //   },
-    // },
-
-    // "/api/hello/:name": async (req) => {
-    //   const name = req.params.name;
-    //   return Response.json({ message: `Hello, ${name}.ico": Bun.file(import.meta.dir + "/assets/logo.svg"),
-
     "/assets/:file": async (req) => {
       const fileName = req.params.file;
       const filePath = import.meta.dir + "/assets/" + fileName;
@@ -89,9 +76,6 @@ async function getBunHTMLBundle() {
   const spaURL = URL.parse("/spa", server.url)!;
   const res = await fetch(spaURL);
   baseHtml = await res.text();
-  console.log(baseHtml);
-
-  return baseHtml;
 }
 
 getBunHTMLBundle();
