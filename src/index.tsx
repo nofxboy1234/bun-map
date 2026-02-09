@@ -6,37 +6,6 @@ import { SimpleCache, CacheProvider } from "@/cache";
 import { matchRoute } from "@/router/routes";
 import index from "@/index.html";
 
-const indexBuild = await Bun.build({
-  entrypoints: ["./src/index.html"],
-  target: "bun",
-  splitting: false,
-});
-console.log(indexBuild);
-
-// const indexHtmlFile = Bun.file(import.meta.dir + "/index.html");
-
-// Bundle the frontend logic
-// async function buildFrontend() {
-//   const build = await Bun.build({
-//     entrypoints: ["./src/frontend.tsx"],
-//     target: "browser",
-//     splitting: false,
-//     sourcemap: process.env.NODE_ENV === "production" ? "none" : "inline",
-//     minify: process.env.NODE_ENV === "production",
-//   });
-
-//   return {
-//     js: build.outputs.find((o) => o.kind === "entry-point"),
-//     css: build.outputs.find((o) => o.kind === "asset" && o.path?.endsWith(".css")),
-//   };
-// }
-
-// In production, cache the build once. In dev, we rebuild on request.
-// let prodAssets: { js: any; css: any } | null = null;
-// if (process.env.NODE_ENV === "production") {
-//   prodAssets = await buildFrontend();
-// }
-
 async function renderSSR(req: Request) {
   const cache = new SimpleCache();
   const url = new URL(req.url);
@@ -57,16 +26,7 @@ async function renderSSR(req: Request) {
   );
 
   const html = baseHtml;
-
-  // Inject HTML, Data Snapshot, and fix the script tag to point to our bundle
   let ssrHtml = html.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`);
-  // .replace(
-  //   '<script type="module" src="./frontend.tsx"></script>',
-  //   '<script type="module" src="/frontend.js"></script>',
-  // );
-
-  // Inject the CSS link
-  // ssrHtml = ssrHtml.replace("</head>", '  <link rel="stylesheet" href="/index.css" />\n  </head>');
 
   const snapshot = cache.snapshot();
   const hydrationScript = `<script>
@@ -82,21 +42,6 @@ async function renderSSR(req: Request) {
 
 const server = serve({
   routes: {
-    // "/favicon.ico": Bun.file(import.meta.dir + "/assets/logo.svg"),
-    // "/frontend.js": async () => {
-    //   const assets = process.env.NODE_ENV === "production" ? prodAssets : await buildFrontend();
-    //   return new Response(assets?.js, {
-    //     headers: { "Content-Type": "text/javascript" },
-    //   });
-    // },
-
-    // "/index.css": async () => {
-    //   const assets = process.env.NODE_ENV === "production" ? prodAssets : await buildFrontend();
-    //   return new Response(assets?.css, {
-    //     headers: { "Content-Type": "text/css" },
-    //   });
-    // },
-
     // "/api/hello": {
     //   async GET(_req) {
     //     return Response.json({ message: "Hello, world!", method: "GET" });
