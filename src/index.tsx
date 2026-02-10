@@ -4,9 +4,28 @@ import { App } from "@/components/App";
 import { ServerRouter } from "@/router";
 import { SimpleCache, CacheProvider } from "@/cache";
 import { matchRoute } from "@/router/routes";
-import index from "@/index.html";
 
-async function renderSSR(req: Request) {
+async function buildFrontend() {
+  const build = await Bun.build({
+    entrypoints: ["./src/frontend.tsx"],
+    target: "browser",
+    splitting: false,
+    sourcemap: process.env.NODE_ENV === "production" ? "none" : "inline",
+    minify: process.env.NODE_ENV === "production",
+  });
+
+  return {
+    js: build.outputs.find((o) => o.kind === "entry-point"),
+    css: build.outputs.find((o) => o.kind === "asset" && o.path?.endsWith(".css")),
+  };
+}
+
+let prodAssets: { js: any; css: any } | null = null;
+if (process.env.NODE_ENV === "production") {
+  prodAssets = await buildFrontend();
+}
+
+async function renderSSR(req: Bun.BunRequest) {
   const cache = new SimpleCache();
   const url = new URL(req.url);
 
@@ -25,11 +44,15 @@ async function renderSSR(req: Request) {
     </CacheProvider>,
   );
 
-  const html = baseHtml;
-  let ssrHtml = html.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`);
+  const baseHtml = await Bun.file(import.meta.dir + "/index.html").text();
+  let ssrHtml = baseHtml
+    .replaceAll('"./', '"/')
+    .replaceAll(".tsx", ".js")
+    .replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`);
 
   const snapshot = cache.snapshot();
-  const hydrationScript = `<script>
+  const hydrationScript = `
+  <script>
     window.__INITIAL_DATA__ = ${JSON.stringify(snapshot)};
     window.__SSR_URL__ = "${req.url}";
   </script>`;
@@ -42,6 +65,22 @@ async function renderSSR(req: Request) {
 
 const server = serve({
   routes: {
+    "/favicon.ico": Bun.file(import.meta.dir + "/assets/logo.svg"),
+
+    "/index.css": async () => {
+      const assets = process.env.NODE_ENV === "production" ? prodAssets : await buildFrontend();
+      return new Response(assets?.css, {
+        headers: { "Content-Type": "text/css" },
+      });
+    },
+
+    "/frontend.js": async () => {
+      const assets = process.env.NODE_ENV === "production" ? prodAssets : await buildFrontend();
+      return new Response(assets?.js, {
+        headers: { "Content-Type": "text/javascript" },
+      });
+    },
+
     "/assets/:file": async (req) => {
       const fileName = req.params.file;
       const filePath = import.meta.dir + "/assets/" + fileName;
@@ -53,8 +92,6 @@ const server = serve({
 
       return new Response("Not Found", { status: 404 });
     },
-
-    "/spa": index,
 
     "/*": async (req) => {
       const ssrResponse = await renderSSR(req);
@@ -69,15 +106,5 @@ const server = serve({
     console: true,
   },
 });
-
-let baseHtml: string;
-
-async function getBunHTMLBundle() {
-  const spaURL = URL.parse("/spa", server.url)!;
-  const res = await fetch(spaURL);
-  baseHtml = await res.text();
-}
-
-getBunHTMLBundle();
 
 console.log(`🚀 Server running at ${server.url}`);

@@ -1,6 +1,5 @@
 import { useRouter, RouterProvider } from "@/router";
 import { matchRoute } from "@/router/routes";
-import "@/index.css";
 
 const reactLogo = "/assets/react.svg";
 
