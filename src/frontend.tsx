@@ -18,18 +18,9 @@ const app = (
 
 let root;
 
-if (import.meta.hot && import.meta.hot.data.root) {
-  root = import.meta.hot.data.root;
-  root.render(app);
+if (elem.hasChildNodes()) {
+  root = hydrateRoot(elem, app);
 } else {
-  if (elem.hasChildNodes()) {
-    root = hydrateRoot(elem, app);
-  } else {
-    root = createRoot(elem);
-    root.render(app);
-  }
-
-  if (import.meta.hot) {
-    import.meta.hot.data.root = root;
-  }
+  root = createRoot(elem);
+  root.render(app);
 }

@@ -9,7 +9,7 @@ export function PokemonList() {
 
   return (
     <div className="list-container">
-      <h2>Select a Pokemon!!</h2>
+      <h2>Select a Pokemon</h2>
       <div className="grid">
         {list.results.map((p: any) => {
           const id = p.url.split("/").filter(Boolean).pop();
