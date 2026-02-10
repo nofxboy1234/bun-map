@@ -1,7 +1,8 @@
 import { useRouter, RouterProvider } from "@/router";
 import { matchRoute } from "@/router/routes";
 import "@/index.css";
-import reactLogo from "@/assets/react.svg";
+
+const reactLogo = "/assets/react.svg";
 
 export function App() {
   return (
