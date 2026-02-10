@@ -5,7 +5,6 @@ import {
   useContext,
   useState,
   useEffect,
-  useRef,
 } from "react";
 import { SimpleCache, globalCache } from "@/cache";
 import type { RouteConfig } from "./routes";
@@ -52,7 +51,6 @@ export function RouterProvider({
 }) {
   const serverUrl = useContext(ServerContext);
   const [isNavigating, setIsNavigating] = useState(false);
-  const isFirstRender = useRef(true);
 
   // Uses useSyncExternalStore to subscribe to URL changes efficiently
   const urlString = useSyncExternalStore(subscribe, getSnapshot, () => {
@@ -112,11 +110,7 @@ export function RouterProvider({
       }
     };
 
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-    } else {
-      handleNavigation();
-    }
+    handleNavigation();
 
     window.addEventListener("popstate", handleNavigation);
     return () => window.removeEventListener("popstate", handleNavigation);
