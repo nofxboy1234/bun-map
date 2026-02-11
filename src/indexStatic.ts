@@ -22,6 +22,7 @@ const server = Bun.serve({
   },
 
   port: 5000,
+  development: false,
 });
 
 console.log(`🚀 Static Server running at ${server.url}`);
