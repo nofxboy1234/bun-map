@@ -1,7 +1,8 @@
 import { useRouter, RouterProvider } from "@/router";
 import { matchRoute } from "@/router/routes";
+import reactLogoAsset from "@/assets/react.svg";
 
-const reactLogo = "/assets/react.svg";
+const reactLogo = typeof window !== "undefined" ? reactLogoAsset : "/assets/react.svg";
 
 export function App() {
   return (

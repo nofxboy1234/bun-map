@@ -12,6 +12,10 @@ async function buildFrontend() {
     splitting: false,
     sourcemap: process.env.NODE_ENV === "production" ? "none" : "inline",
     minify: process.env.NODE_ENV === "production",
+    naming: {
+      asset: "assets/[name].[ext]",
+    },
+    publicPath: "/",
   });
 
   return {
@@ -91,6 +95,44 @@ const server = serve({
       }
 
       return new Response("Not Found", { status: 404 });
+    },
+
+    "/api/hello": {
+      async GET(req) {
+        return Response.json(
+          {
+            message: "Hello, world!",
+            method: "GET",
+          },
+          {
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+            },
+          },
+        );
+      },
+      async PUT(req) {
+        return Response.json(
+          {
+            message: "Hello, world!",
+            method: "PUT",
+          },
+          {
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+            },
+          },
+        );
+      },
+      async OPTIONS(req) {
+        return new Response(null, {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+          },
+        });
+      },
     },
 
     "/*": async (req) => {
