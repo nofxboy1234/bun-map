@@ -133,8 +133,6 @@ const server = serve({
       return new Response("Not Found", { status: 404 });
     },
   },
-
-  development: false,
 });
 
 console.log(`🚀 Server running at ${server.url}`);
