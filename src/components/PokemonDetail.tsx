@@ -1,7 +1,6 @@
 import { useRouter } from "@/router";
 import { Link } from "@/router/components/Link";
 import { useData } from "@/components/hooks";
-import { Hello } from "@/components/Hello";
 
 export function PokemonDetail() {
   const { params } = useRouter();
@@ -25,7 +24,6 @@ export function PokemonDetail() {
         <p>Height: {pokemon.height}</p>
         <p>Weight: {pokemon.weight}</p>
       </div>
-      <Hello />
     </div>
   );
 }

@@ -15,9 +15,11 @@ export function PokemonList() {
           const id = p.url.split("/").filter(Boolean).pop();
 
           return (
-            <Link key={id} href={`/pokemon/${id}`} className="list-item">
-              {p.name}
-            </Link>
+            <div key={id}>
+              <Link href={`/pokemon/${id}`} className="list-item">
+                {p.name}
+              </Link>
+            </div>
           );
         })}
       </div>
