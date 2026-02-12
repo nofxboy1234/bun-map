@@ -1,6 +1,7 @@
 import { useRouter, RouterProvider } from "@/router";
 import { matchRoute } from "@/router/routes";
 import reactLogoAsset from "@/assets/react.svg";
+import { useState } from "react";
 
 const reactLogo = typeof window !== "undefined" ? reactLogoAsset : "/assets/react.svg";
 
@@ -14,6 +15,7 @@ export function App() {
 
 function AppContent() {
   const { isNavigating, route } = useRouter();
+  const [count, setCount] = useState(0);
 
   let content;
 
@@ -32,6 +34,8 @@ function AppContent() {
         {isNavigating && <div className="loading-bar" />}
       </header>
       <img src={reactLogo} alt="react logo" width={"100px"} />
+      <button onClick={() => setCount(count + 1)}>Count</button>
+      <div>{count}</div>
       <main>{content}</main>
     </div>
   );
