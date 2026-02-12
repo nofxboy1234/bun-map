@@ -15,7 +15,7 @@ export function App() {
 
 function AppContent() {
   const { isNavigating, route } = useRouter();
-  const [count, setCount] = useState(0);
+  const [num, setNum] = useState(0);
 
   let content;
 
@@ -34,8 +34,8 @@ function AppContent() {
         {isNavigating && <div className="loading-bar" />}
       </header>
       <img src={reactLogo} alt="react logo" width={"100px"} />
-      <button onClick={() => setCount(count + 1)}>Count</button>
-      <div>{count}</div>
+      <button onClick={() => setNum(num + 1)}>Count</button>
+      <div>{num}</div>
       <main>{content}</main>
     </div>
   );
