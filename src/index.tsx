@@ -58,6 +58,12 @@ async function renderSSR(req: Bun.BunRequest) {
   });
 }
 
+const testRoutes = {
+  "/users/:id": (req: Bun.BunRequest<"/users/:id">) => {
+    return new Response(`Hello user ${req.params.id}`);
+  },
+};
+
 const server = serve({
   routes: {
     "/favicon.ico": Bun.file(import.meta.dir + "/assets/logo.svg"),
@@ -132,6 +138,8 @@ const server = serve({
 
       return new Response("Not Found", { status: 404 });
     },
+
+    ...testRoutes,
   },
 });
 

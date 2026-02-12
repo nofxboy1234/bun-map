@@ -36,6 +36,7 @@ function AppContent() {
       <img src={reactLogo} alt="react logo" width={"100px"} />
       <button onClick={() => setNum(num + 1)}>Count</button>
       <div>{num}</div>
+      <a href="/users/duke">Duke</a>
       <main>{content}</main>
     </div>
   );
