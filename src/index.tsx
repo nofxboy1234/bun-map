@@ -89,7 +89,7 @@ const server = serve({
     },
 
     "/api/hello": {
-      async GET(req) {
+      async GET(_req) {
         return Response.json(
           {
             message: "Hello, world!",
@@ -102,7 +102,7 @@ const server = serve({
           },
         );
       },
-      async PUT(req) {
+      async PUT(_req) {
         return Response.json(
           {
             message: "Hello, world!",
@@ -115,7 +115,7 @@ const server = serve({
           },
         );
       },
-      async OPTIONS(req) {
+      async OPTIONS(_req) {
         return new Response(null, {
           headers: {
             "Access-Control-Allow-Origin": "*",
