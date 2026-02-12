@@ -9,10 +9,10 @@
     "tsgo": "bunx --bun tsgo",
     "dev": "bun --hot src/index.tsx",
     "dev:debug": "bun --inspect-brk src/index.tsx",
+    "start": "NODE_ENV=production bun src/index.tsx",
+    "dev:spa": "bun --port=5000 src/index.html",
     "build:static": "bun src/buildStaticFrontend.ts",
-    "dev:static": "bun --hot src/indexStatic.ts",
-    "clean": "rm -rf dist && echo 'Cleaned dist.'",
-    "start": "NODE_ENV=production bun src/index.tsx"
+    "clean": "rm -rf dist && echo 'Cleaned dist.'"
   },
   "dependencies": {
     "react": "^19",
