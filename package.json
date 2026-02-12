@@ -10,7 +10,6 @@
     "dev": "bun --hot src/index.tsx",
     "dev:debug": "bun --inspect-brk src/index.tsx",
     "start": "NODE_ENV=production bun src/index.tsx",
-    "dev:spa": "bun --port=5000 src/index.html",
     "build:static": "bun src/buildStaticFrontend.ts",
     "clean": "rm -rf dist && echo 'Cleaned dist.'"
   },
