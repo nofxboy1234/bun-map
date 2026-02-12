@@ -21,12 +21,13 @@ export function useData<T>(key: string) {
   useEffect(() => {
     // If data is missing and we have a current route with loadData, try to trigger it.
     // This handles cases where the cache might have expired.
-    if (!data && route?.loadData) {
+    // We also check isPending to avoid duplicate requests.
+    if (!data && route?.loadData && !cache.isPending(key)) {
       route.loadData(cache, params, url).catch(() => {
         // Error handling could be added here
       });
     }
-  }, [data, route, params, url, cache]);
+  }, [data, route, params, url, cache, key]);
 
   return {
     data,
