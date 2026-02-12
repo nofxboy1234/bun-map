@@ -48,6 +48,8 @@ export class SimpleCache {
 
     if (Date.now() > entry.expiry) {
       this.data.delete(key);
+      // Notify asynchronously to avoid triggering re-renders during current render
+      queueMicrotask(() => this.notify(key));
       return undefined;
     }
 
@@ -60,10 +62,15 @@ export class SimpleCache {
 
     if (Date.now() > entry.expiry) {
       this.data.delete(key);
+      queueMicrotask(() => this.notify(key));
       return false;
     }
 
     return true;
+  }
+
+  isPending(key: string) {
+    return this.pending.has(key);
   }
 
   async fetch<T>(key: string, fetcher: () => Promise<T>, ttl = 1000 * 10): Promise<T> {

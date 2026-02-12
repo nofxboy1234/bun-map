@@ -6,6 +6,7 @@ import {
   useState,
   useEffect,
   useRef,
+  useCallback,
 } from "react";
 import { SimpleCache, globalCache } from "@/cache";
 import type { RouteConfig } from "./routes";
@@ -66,24 +67,27 @@ export function RouterProvider({
   const url = useMemo(() => new URL(urlString), [urlString]);
   const match = useMemo(() => matchRoute(url.pathname), [url.pathname, matchRoute]);
 
-  const navigate = async (path: string) => {
-    if (typeof window === "undefined") return;
+  const navigate = useCallback(
+    async (path: string) => {
+      if (typeof window === "undefined") return;
 
-    const targetUrl = new URL(path, window.location.origin);
-    const targetMatch = matchRoute(targetUrl.pathname);
+      const targetUrl = new URL(path, window.location.origin);
+      const targetMatch = matchRoute(targetUrl.pathname);
 
-    setIsNavigating(true);
-    try {
-      if (targetMatch?.route.loadData) {
-        await targetMatch.route.loadData(cache, targetMatch.params, targetUrl);
+      setIsNavigating(true);
+      try {
+        if (targetMatch?.route.loadData) {
+          await targetMatch.route.loadData(cache, targetMatch.params, targetUrl);
+        }
+      } finally {
+        setIsNavigating(false);
       }
-    } finally {
-      setIsNavigating(false);
-    }
 
-    window.history.pushState(null, "", path);
-    if (historyEvent) window.dispatchEvent(historyEvent);
-  };
+      window.history.pushState(null, "", path);
+      if (historyEvent) window.dispatchEvent(historyEvent);
+    },
+    [matchRoute, cache],
+  );
 
   const value = useMemo(
     () => ({
@@ -93,7 +97,7 @@ export function RouterProvider({
       route: match?.route,
       params: match?.params || {},
     }),
-    [isNavigating, url, match],
+    [isNavigating, url, match, navigate],
   );
 
   // Handle Initial Load and Popstate (Back/Forward)
