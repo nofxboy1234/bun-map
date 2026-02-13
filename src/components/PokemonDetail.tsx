@@ -6,8 +6,6 @@ export function PokemonDetail() {
   const { params } = useRouter();
   const id = params.id;
 
-  if (!id) return <div>Missing ID</div>;
-
   const cacheKey = `pokemon-${id}`;
   const { data: pokemon, isLoading } = useData<any>(cacheKey);
 

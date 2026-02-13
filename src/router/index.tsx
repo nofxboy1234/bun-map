@@ -68,7 +68,7 @@ export function RouterProvider({
       }
 
       window.history.pushState(null, "", path);
-      if (historyEvent) window.dispatchEvent(historyEvent);
+      window.dispatchEvent(historyEvent);
     },
     [matchRoute, cache],
   );
