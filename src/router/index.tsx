@@ -10,11 +10,9 @@ import {
 import { SimpleCache, globalCache } from "@/cache";
 import type { RouteConfig } from "./routes";
 
-const historyEvent = typeof window !== "undefined" ? new Event("pushstate") : null;
+const historyEvent = new Event("pushstate");
 
 function subscribe(callback: () => void) {
-  if (typeof window === "undefined") return () => {};
-
   window.addEventListener("popstate", callback);
   window.addEventListener("pushstate", callback);
 
@@ -50,15 +48,13 @@ export function RouterProvider({
   const [isNavigating, setIsNavigating] = useState(false);
 
   // Uses useSyncExternalStore to subscribe to URL changes efficiently
-  const urlString = useSyncExternalStore(subscribe, getSnapshot, () => "http://localhost/");
+  const urlString = useSyncExternalStore(subscribe, getSnapshot);
 
   const url = useMemo(() => new URL(urlString), [urlString]);
   const match = useMemo(() => matchRoute(url.pathname), [url.pathname, matchRoute]);
 
   const navigate = useCallback(
     async (path: string) => {
-      if (typeof window === "undefined") return;
-
       const targetUrl = new URL(path, window.location.origin);
       const targetMatch = matchRoute(targetUrl.pathname);
 
@@ -116,7 +112,7 @@ export function RouterProvider({
 export function useRouter() {
   const context = useContext(RouterContext);
   if (!context) {
-    const initialUrl = typeof window !== "undefined" ? window.location.href : "http://localhost/";
+    const initialUrl = window.location.href;
 
     const url = new URL(initialUrl);
     return {
