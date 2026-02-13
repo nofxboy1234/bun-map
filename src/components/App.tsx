@@ -15,7 +15,7 @@ export function App() {
 }
 
 function AppContent() {
-  const { isNavigating, route } = useRouter();
+  const { route } = useRouter();
   const [num, setNum] = useState(0);
 
   let content;
@@ -29,10 +29,9 @@ function AppContent() {
   }
 
   return (
-    <div className={`app-container ${isNavigating ? "navigating" : ""}`}>
+    <div className="app-container">
       <header>
         <h1>⚡ Bun Router Demo</h1>
-        {isNavigating && <div className="loading-bar" />}
       </header>
 
       <div className="logo-container">
@@ -49,28 +48,3 @@ function AppContent() {
 }
 
 export default App;
-
-// import { APITester } from "./APITester";
-// import "@/index.css";
-
-// import logo from "@/assets/logo.svg";
-// import reactLogo from "@/assets/react.svg";
-
-// export function App() {
-//   return (
-//     <div className="app">
-//       <div className="logo-container">
-//         <img src={logo} alt="Bun Logo" className="logo bun-logo" />
-//         <img src={reactLogo} alt="React Logo" className="logo react-logo" />
-//       </div>
-
-//       <h1>Bun + React</h1>
-//       <p>
-//         Edit <code>src/components/App.tsx</code> and save to test HMR
-//       </p>
-//       <APITester />
-//     </div>
-//   );
-// }
-
-// export default App;

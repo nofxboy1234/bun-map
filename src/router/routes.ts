@@ -16,11 +16,6 @@ export const routes: RouteConfig[] = [
     loadData: (cache) => cache.fetch("pokemon-list", fetchPokemonList),
   },
   {
-    path: "/ssr",
-    component: PokemonList,
-    loadData: (cache) => cache.fetch("pokemon-list", fetchPokemonList),
-  },
-  {
     path: "/pokemon/:id",
     component: PokemonDetail,
     loadData: (cache, params) => {

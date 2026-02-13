@@ -9,30 +9,28 @@ import { useRouter } from "@/router";
  */
 export function useData<T>(key: string) {
   const cache = useCache();
-  const { route, params, url } = useRouter();
+  const { route, params, url, isNavigating } = useRouter();
 
   // Subscribe to cache changes for this specific key
   const data = useSyncExternalStore(
     (notify: () => void) => cache.subscribe(key, notify),
     () => cache.get(key) as T | undefined,
-    () => cache.get(key) as T | undefined, // Server snapshot
+    () => cache.get(key) as T | undefined,
   );
 
   useEffect(() => {
     // If data is missing and we have a current route with loadData, try to trigger it.
-    // This handles cases where the cache might have expired.
-    // We also check isPending to avoid duplicate requests.
-    if (!data && route?.loadData && !cache.isPending(key)) {
+    // We only do this if we are not currently navigating, to avoid refetching
+    // the old route's data just before it unmounts (e.g. if it expired).
+    if (!isNavigating && !data && route?.loadData && !cache.isPending(key)) {
       route.loadData(cache, params, url).catch(() => {
         // Error handling could be added here
       });
     }
-  }, [data, route, params, url, cache, key]);
+  }, [data, route, params, url, cache, key, isNavigating]);
 
   return {
     data,
     isLoading: !data,
-    // Note: error handling should now ideally be handled at the router level
-    // or by checking if data is missing after navigation completes.
   };
 }

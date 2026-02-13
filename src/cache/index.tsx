@@ -12,12 +12,6 @@ export class SimpleCache {
   private pending = new Map<string, Promise<any>>();
   private keyListeners = new Map<string, Set<() => void>>();
 
-  constructor(initialData?: Record<string, CacheEntry<any>>) {
-    if (initialData) {
-      this.restore(initialData);
-    }
-  }
-
   subscribe(key: string, listener: () => void) {
     if (!this.keyListeners.has(key)) {
       this.keyListeners.set(key, new Set());
@@ -94,22 +88,6 @@ export class SimpleCache {
 
     this.pending.set(key, promise);
     return promise;
-  }
-
-  invalidate(key: string) {
-    this.data.delete(key);
-    this.notify(key);
-  }
-
-  snapshot() {
-    return Object.fromEntries(this.data);
-  }
-
-  restore(data: Record<string, CacheEntry<any>>) {
-    Object.entries(data).forEach(([key, entry]) => {
-      this.data.set(key, entry);
-      this.notify(key);
-    });
   }
 }
 
