@@ -1,0 +1,9 @@
+{
+  "search.exclude": {
+    "dist/**/*": true
+  },
+  "files.readonlyInclude": {
+    "node_modules/**/*": true,
+    "/home/dylan/.vscode/**/*": true
+  }
+}
