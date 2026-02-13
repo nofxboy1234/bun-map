@@ -39,9 +39,6 @@ type RouterContextType = {
 
 const RouterContext = createContext<RouterContextType | null>(null);
 
-// Context to pass the server URL during SSR
-const ServerContext = createContext<string | null>(null);
-
 export function RouterProvider({
   children,
   matchRoute,
@@ -51,18 +48,11 @@ export function RouterProvider({
   matchRoute: (path: string) => { route: RouteConfig; params: Record<string, string> } | undefined;
   cache?: SimpleCache;
 }) {
-  const serverUrl = useContext(ServerContext);
   const [isNavigating, setIsNavigating] = useState(false);
   const isFirstRender = useRef(true);
 
   // Uses useSyncExternalStore to subscribe to URL changes efficiently
-  const urlString = useSyncExternalStore(subscribe, getSnapshot, () => {
-    if (serverUrl) return serverUrl;
-    if (typeof window !== "undefined" && (window as any).__SSR_URL__) {
-      return (window as any).__SSR_URL__;
-    }
-    return "http://localhost/";
-  });
+  const urlString = useSyncExternalStore(subscribe, getSnapshot, () => "http://localhost/");
 
   const url = useMemo(() => new URL(urlString), [urlString]);
   const match = useMemo(() => matchRoute(url.pathname), [url.pathname, matchRoute]);
@@ -129,19 +119,10 @@ export function RouterProvider({
   return <RouterContext.Provider value={value}>{children}</RouterContext.Provider>;
 }
 
-export function ServerRouter({ url, children }: { url: string; children: React.ReactNode }) {
-  return <ServerContext.Provider value={url}>{children}</ServerContext.Provider>;
-}
-
 export function useRouter() {
   const context = useContext(RouterContext);
   if (!context) {
-    // Fallback for SSR or when Provider is missing
-    const serverUrl = useContext(ServerContext);
-    const initialUrl =
-      serverUrl ||
-      (typeof window !== "undefined" ? (window as any).__SSR_URL__ : null) ||
-      "http://localhost/";
+    const initialUrl = typeof window !== "undefined" ? window.location.href : "http://localhost/";
 
     const url = new URL(initialUrl);
     return {

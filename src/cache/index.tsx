@@ -114,17 +114,7 @@ export class SimpleCache {
 }
 
 // Global default cache for client-side usage (singleton)
-export const globalCache = AutoHydratedCache();
-
-function AutoHydratedCache() {
-  const cache = new SimpleCache();
-
-  if (typeof window !== "undefined" && (window as any).__INITIAL_DATA__) {
-    cache.restore((window as any).__INITIAL_DATA__);
-  }
-
-  return cache;
-}
+export const globalCache = new SimpleCache();
 
 const CacheContext = createContext<SimpleCache>(globalCache);
 
