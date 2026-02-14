@@ -92,9 +92,12 @@ export function RouterProvider({
   useEffect(() => {
     if (match?.route.loadData) {
       setIsNavigating(true);
-      match.route.loadData(cache, match.params, url).finally(() => {
-        setIsNavigating(false);
-      });
+      match.route
+        .loadData(cache, match.params, url)
+        .catch((err) => console.error("Route data load failed", err))
+        .finally(() => {
+          setIsNavigating(false);
+        });
     }
     // We only want this to run when the matched route or parameters change,
     // which happens on initial load, programmatic navigate(), or browser back/forward.
