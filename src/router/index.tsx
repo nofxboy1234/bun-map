@@ -45,7 +45,11 @@ export function RouterProvider({
   matchRoute: (path: string) => { route: RouteConfig; params: Record<string, string> } | undefined;
   cache?: SimpleCache;
 }) {
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(() => {
+    const currentUrl = new URL(getSnapshot());
+    const currentMatch = matchRoute(currentUrl.pathname);
+    return !!currentMatch?.route.loadData;
+  });
 
   // Uses useSyncExternalStore to subscribe to URL changes efficiently
   const urlString = useSyncExternalStore(subscribe, getSnapshot);
