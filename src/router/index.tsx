@@ -86,25 +86,15 @@ export function RouterProvider({
 
   // Handle Initial Load and Popstate (Back/Forward)
   useEffect(() => {
-    const handleNavigation = async () => {
-      const currentUrl = new URL(window.location.href);
-      const currentMatch = matchRoute(currentUrl.pathname);
-
-      if (currentMatch?.route.loadData) {
-        setIsNavigating(true);
-        try {
-          await currentMatch.route.loadData(cache, currentMatch.params, currentUrl);
-        } finally {
-          setIsNavigating(false);
-        }
-      }
-    };
-
-    handleNavigation();
-
-    window.addEventListener("popstate", handleNavigation);
-    return () => window.removeEventListener("popstate", handleNavigation);
-  }, [cache, matchRoute]);
+    if (match?.route.loadData) {
+      setIsNavigating(true);
+      match.route.loadData(cache, match.params, url).finally(() => {
+        setIsNavigating(false);
+      });
+    }
+    // We only want this to run when the matched route or parameters change,
+    // which happens on initial load, programmatic navigate(), or browser back/forward.
+  }, [match, cache, url]);
 
   return <RouterContext.Provider value={value}>{children}</RouterContext.Provider>;
 }

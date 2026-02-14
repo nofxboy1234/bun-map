@@ -20,7 +20,7 @@ export const routes: RouteConfig[] = [
     component: PokemonDetail,
     loadData: (cache, params) => {
       const { id } = params;
-      return cache.fetch(`pokemon-${id}`, () => fetchPokemonDetail(id));
+      return cache.fetch(`pokemon-${id}`, () => fetchPokemonDetail(id!));
     },
   },
 ];
