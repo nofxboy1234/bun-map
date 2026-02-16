@@ -20,6 +20,24 @@ const clientOutdir = "/tmp/bun-map-ssr-client";
 let clientHtmlTemplate = "";
 const clientAssets = new Map<string, ClientAsset>();
 
+function toNormalizedOutputPath(buildPath: string, normalizedOutdir: string) {
+  const normalizedBuildPath = buildPath.replaceAll("\\", "/");
+
+  if (normalizedBuildPath.startsWith(normalizedOutdir)) {
+    return normalizedBuildPath.slice(normalizedOutdir.length);
+  }
+
+  if (normalizedBuildPath.startsWith("./")) {
+    return normalizedBuildPath.slice(1);
+  }
+
+  if (normalizedBuildPath.startsWith("/")) {
+    return normalizedBuildPath;
+  }
+
+  return `/${normalizedBuildPath}`;
+}
+
 if (isProd && isSSRMode) {
   const clientBuild = await Bun.build({
     entrypoints: ["./src/index.html"],
@@ -45,14 +63,7 @@ if (isProd && isSSRMode) {
   const normalizedOutdir = clientOutdir.replaceAll("\\", "/");
 
   for (const output of clientBuild.outputs) {
-    const normalizedBuildPath = output.path.replaceAll("\\", "/");
-    const normalizedPath = normalizedBuildPath.startsWith(normalizedOutdir)
-      ? normalizedBuildPath.slice(normalizedOutdir.length)
-      : normalizedBuildPath.startsWith("./")
-        ? normalizedBuildPath.slice(1)
-        : normalizedBuildPath.startsWith("/")
-          ? normalizedBuildPath
-          : `/${normalizedBuildPath}`;
+    const normalizedPath = toNormalizedOutputPath(output.path, normalizedOutdir);
 
     if (normalizedPath === "/index.html") {
       clientHtmlTemplate = await Bun.file(output.path).text();
@@ -76,11 +87,23 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
 };
 
+const inlineScriptEscapePattern = /[<\u2028\u2029]/g;
+const inlineScriptEscapeMap = {
+  "<": "\\u003c",
+  "\u2028": "\\u2028",
+  "\u2029": "\\u2029",
+} as const;
+
+function escapeInlineScriptJson(json: string) {
+  return json.replace(
+    inlineScriptEscapePattern,
+    (char) => inlineScriptEscapeMap[char as keyof typeof inlineScriptEscapeMap],
+  );
+}
+
 function serializeForInlineScript(value: unknown) {
-  return JSON.stringify(value)
-    .replace(/</g, "\\u003c")
-    .replace(/\u2028/g, "\\u2028")
-    .replace(/\u2029/g, "\\u2029");
+  const json = JSON.stringify(value);
+  return escapeInlineScriptJson(json);
 }
 
 async function renderSSRPage(req: Request, routeMatch = matchRoute(new URL(req.url).pathname)) {
