@@ -7,7 +7,12 @@ export type RouteConfig = {
   path: string;
   component: React.ComponentType;
   getCacheKey?: (params: Record<string, string>, url: URL) => string;
-  loadData?: (cache: SimpleCache, params: Record<string, string>, url: URL) => Promise<any>;
+  loadData?: (
+    cache: SimpleCache,
+    params: Record<string, string>,
+    url: URL,
+    signal?: AbortSignal,
+  ) => Promise<any>;
 };
 
 export type RouteMatch = {
@@ -20,15 +25,16 @@ export const routes: RouteConfig[] = [
     path: "/",
     getCacheKey: () => pokemonCacheKeys.list,
     component: PokemonList,
-    loadData: (cache) => cache.fetch(pokemonCacheKeys.list, fetchPokemonList),
+    loadData: (cache, _params, _url, signal) =>
+      cache.fetch(pokemonCacheKeys.list, () => fetchPokemonList(signal)),
   },
   {
     path: "/pokemon/:id",
     getCacheKey: (params) => pokemonCacheKeys.detail(params.id!),
     component: PokemonDetail,
-    loadData: (cache, params) => {
+    loadData: (cache, params, _url, signal) => {
       const { id } = params;
-      return cache.fetch(pokemonCacheKeys.detail(id!), () => fetchPokemonDetail(id!));
+      return cache.fetch(pokemonCacheKeys.detail(id!), () => fetchPokemonDetail(id!, signal));
     },
   },
 ];

@@ -4,12 +4,12 @@ export const pokemonCacheKeys = {
 };
 
 // --- Data Fetchers ---
-export const fetchPokemonList = async () => {
-  const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=5");
+export const fetchPokemonList = async (signal?: AbortSignal) => {
+  const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=5", { signal });
   return res.json();
 };
 
-export const fetchPokemonDetail = async (id: string) => {
-  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+export const fetchPokemonDetail = async (id: string, signal?: AbortSignal) => {
+  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`, { signal });
   return res.json();
 };

@@ -25,6 +25,12 @@ function getSnapshot() {
   return window.location.href;
 }
 
+function isAbortError(err: unknown) {
+  return err instanceof DOMException
+    ? err.name === "AbortError"
+    : (err as { name?: string })?.name === "AbortError";
+}
+
 type RouterContextType = {
   isNavigating: boolean;
   navigate: (path: string) => void;
@@ -56,6 +62,7 @@ export function RouterProvider({
   const url = useMemo(() => new URL(urlString), [urlString]);
   const match = useMemo(() => matchRoute(url.pathname), [url.pathname, matchRoute]);
   const loadSeqRef = useRef(0);
+  const loadAbortRef = useRef<AbortController | null>(null);
 
   const navigate = useCallback((path: string) => {
     const targetUrl = new URL(path, window.location.origin);
@@ -85,6 +92,8 @@ export function RouterProvider({
   useEffect(() => {
     let cancelled = false;
     const currentSeq = ++loadSeqRef.current;
+    loadAbortRef.current?.abort();
+    loadAbortRef.current = null;
 
     if (!match?.route.loadData) {
       setIsNavigating(false);
@@ -93,19 +102,32 @@ export function RouterProvider({
       };
     }
 
+    const controller = new AbortController();
+    loadAbortRef.current = controller;
+
     setIsNavigating(true);
-    loadRouteData(match, cache, url)
+    loadRouteData(match, cache, url, controller.signal)
       .catch((err) => {
+        if (isAbortError(err)) return;
         console.error("Route data load failed", err);
       })
       .finally(() => {
-        if (!cancelled && currentSeq === loadSeqRef.current) {
+        if (
+          !cancelled &&
+          currentSeq === loadSeqRef.current &&
+          loadAbortRef.current === controller
+        ) {
           setIsNavigating(false);
+          loadAbortRef.current = null;
         }
       });
 
     return () => {
       cancelled = true;
+      controller.abort();
+      if (loadAbortRef.current === controller) {
+        loadAbortRef.current = null;
+      }
     };
   }, [match, cache, url]);
 
@@ -138,7 +160,12 @@ export function useRouter() {
   };
 }
 
-export async function loadRouteData(match: RouteMatch | undefined, cache: SimpleCache, url: URL) {
+export async function loadRouteData(
+  match: RouteMatch | undefined,
+  cache: SimpleCache,
+  url: URL,
+  signal?: AbortSignal,
+) {
   if (!match?.route.loadData) return;
-  await match.route.loadData(cache, match.params, url);
+  await match.route.loadData(cache, match.params, url, signal);
 }
