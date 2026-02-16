@@ -12,6 +12,13 @@ type PendingEntry<T> = {
   signal?: AbortSignal;
 };
 
+export type SerializedCacheEntry = {
+  value: unknown;
+  expiry: number;
+};
+
+export type SerializedCache = Record<string, SerializedCacheEntry>;
+
 function isAbortError(err: unknown) {
   return err instanceof DOMException
     ? err.name === "AbortError"
@@ -76,6 +83,38 @@ export class SimpleCache {
 
   isPending(key: string) {
     return this.pending.has(key);
+  }
+
+  dehydrate(): SerializedCache {
+    const now = Date.now();
+    const snapshot: SerializedCache = {};
+
+    for (const [key, entry] of this.data) {
+      if (entry.expiry > now) {
+        snapshot[key] = {
+          value: entry.value,
+          expiry: entry.expiry,
+        };
+      }
+    }
+
+    return snapshot;
+  }
+
+  hydrate(snapshot: SerializedCache | null | undefined) {
+    if (!snapshot) return;
+
+    const now = Date.now();
+    for (const [key, entry] of Object.entries(snapshot)) {
+      if (!entry || typeof entry.expiry !== "number" || entry.expiry <= now) {
+        continue;
+      }
+
+      this.data.set(key, {
+        value: entry.value,
+        expiry: entry.expiry,
+      });
+    }
   }
 
   async fetch<T>(

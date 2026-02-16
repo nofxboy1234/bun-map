@@ -1,5 +1,7 @@
+import { cp, mkdir } from "node:fs/promises";
+
 export async function buildStaticFrontend() {
-  return await Bun.build({
+  const result = await Bun.build({
     entrypoints: ["./src/index.html"],
     target: "browser",
     splitting: false,
@@ -12,4 +14,13 @@ export async function buildStaticFrontend() {
     outdir: "dist",
     env: "BUN_PUBLIC_*",
   });
+
+  if (!result.success) {
+    return result;
+  }
+
+  await mkdir("./dist/assets", { recursive: true });
+  await cp("./src/assets", "./dist/assets", { recursive: true, force: true });
+
+  return result;
 }

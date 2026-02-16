@@ -11,18 +11,10 @@ import {
 import { SimpleCache, globalCache } from "@/cache";
 import type { RouteConfig, RouteMatch } from "./routes";
 
-function subscribe(callback: () => void) {
-  window.addEventListener("popstate", callback);
-  window.addEventListener("pushstate", callback);
+const SSR_BASE_URL = "http://localhost";
 
-  return () => {
-    window.removeEventListener("popstate", callback);
-    window.removeEventListener("pushstate", callback);
-  };
-}
-
-function getSnapshot() {
-  return window.location.href;
+function getAbsoluteUrl(pathOrUrl?: string) {
+  return new URL(pathOrUrl || "/", SSR_BASE_URL).href;
 }
 
 function isAbortError(err: unknown) {
@@ -45,37 +37,83 @@ export function RouterProvider({
   children,
   matchRoute,
   cache = globalCache,
+  initialPath,
+  staticMode = false,
 }: {
   children: React.ReactNode;
   matchRoute: (path: string) => RouteMatch | undefined;
   cache?: SimpleCache;
+  initialPath?: string;
+  staticMode?: boolean;
 }) {
+  const initialUrlString = useMemo(() => {
+    if (typeof window !== "undefined") {
+      return window.location.href;
+    }
+
+    return getAbsoluteUrl(initialPath);
+  }, [initialPath]);
+
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (staticMode || typeof window === "undefined") {
+        return () => {};
+      }
+
+      window.addEventListener("popstate", callback);
+      window.addEventListener("pushstate", callback);
+
+      return () => {
+        window.removeEventListener("popstate", callback);
+        window.removeEventListener("pushstate", callback);
+      };
+    },
+    [staticMode],
+  );
+
+  const getClientSnapshot = useCallback(() => {
+    if (typeof window === "undefined") {
+      return initialUrlString;
+    }
+
+    return window.location.href;
+  }, [initialUrlString]);
+
+  const getServerSnapshot = useCallback(() => initialUrlString, [initialUrlString]);
+
   const [isNavigating, setIsNavigating] = useState(() => {
-    const currentUrl = new URL(getSnapshot());
+    const currentUrl = new URL(initialUrlString);
     const currentMatch = matchRoute(currentUrl.pathname);
     return !!currentMatch?.route.loadData;
   });
 
   // Uses useSyncExternalStore to subscribe to URL changes efficiently
-  const urlString = useSyncExternalStore(subscribe, getSnapshot);
+  const urlString = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
 
   const url = useMemo(() => new URL(urlString), [urlString]);
   const match = useMemo(() => matchRoute(url.pathname), [url.pathname, matchRoute]);
   const loadSeqRef = useRef(0);
   const loadAbortRef = useRef<AbortController | null>(null);
 
-  const navigate = useCallback((path: string) => {
-    const targetUrl = new URL(path, window.location.origin);
-    if (
-      targetUrl.pathname === window.location.pathname &&
-      targetUrl.search === window.location.search
-    ) {
-      return;
-    }
+  const navigate = useCallback(
+    (path: string) => {
+      if (staticMode || typeof window === "undefined") {
+        return;
+      }
 
-    window.history.pushState(null, "", path);
-    window.dispatchEvent(new Event("pushstate"));
-  }, []);
+      const targetUrl = new URL(path, window.location.origin);
+      if (
+        targetUrl.pathname === window.location.pathname &&
+        targetUrl.search === window.location.search
+      ) {
+        return;
+      }
+
+      window.history.pushState(null, "", path);
+      window.dispatchEvent(new Event("pushstate"));
+    },
+    [staticMode],
+  );
 
   const value = useMemo(
     () => ({
@@ -139,9 +177,8 @@ export function RouterProvider({
 export function useRouter() {
   const context = useContext(RouterContext);
   if (!context) {
-    const initialUrl = window.location.href;
-
-    const url = new URL(initialUrl);
+    const fallbackUrl = typeof window !== "undefined" ? window.location.href : getAbsoluteUrl("/");
+    const url = new URL(fallbackUrl);
     return {
       url,
       path: url.pathname,
