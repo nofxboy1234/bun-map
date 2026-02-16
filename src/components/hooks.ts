@@ -2,6 +2,12 @@ import { useSyncExternalStore, useEffect } from "react";
 import { useCache } from "@/cache";
 import { loadRouteData, useRouter } from "@/router";
 
+function isAbortError(err: unknown) {
+  return err instanceof DOMException
+    ? err.name === "AbortError"
+    : (err as { name?: string })?.name === "AbortError";
+}
+
 /**
  * useData now acts as a passive consumer of the cache.
  * Data is expected to be pre-loaded by the Router or a Prefetch action.
@@ -24,9 +30,22 @@ export function useData<T>(key: string) {
     // We only do this if we are not currently navigating, to avoid refetching
     // the old route's data just before it unmounts (e.g. if it expired).
     if (!isNavigating && !data && routeKey === key && route?.loadData && !cache.isPending(key)) {
-      loadRouteData({ route, params }, cache, url).catch(() => {
-        // Error handling could be added here
+      const controller = new AbortController();
+
+      loadRouteData({ route, params }, cache, url, controller.signal).catch((err) => {
+        if (isAbortError(err)) {
+          return;
+        }
+        console.error("Fallback route data load failed", {
+          key,
+          path: url.pathname,
+          err,
+        });
       });
+
+      return () => {
+        controller.abort();
+      };
     }
   }, [data, route, params, url, cache, key, isNavigating, routeKey]);
 

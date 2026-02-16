@@ -108,7 +108,9 @@ export function RouterProvider({
     setIsNavigating(true);
     loadRouteData(match, cache, url, controller.signal)
       .catch((err) => {
-        if (isAbortError(err)) return;
+        if (isAbortError(err)) {
+          return;
+        }
         console.error("Route data load failed", err);
       })
       .finally(() => {

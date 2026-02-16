@@ -26,7 +26,7 @@ export const routes: RouteConfig[] = [
     getCacheKey: () => pokemonCacheKeys.list,
     component: PokemonList,
     loadData: (cache, _params, _url, signal) =>
-      cache.fetch(pokemonCacheKeys.list, () => fetchPokemonList(signal)),
+      cache.fetch(pokemonCacheKeys.list, () => fetchPokemonList(signal), { signal }),
   },
   {
     path: "/pokemon/:id",
@@ -34,7 +34,9 @@ export const routes: RouteConfig[] = [
     component: PokemonDetail,
     loadData: (cache, params, _url, signal) => {
       const { id } = params;
-      return cache.fetch(pokemonCacheKeys.detail(id!), () => fetchPokemonDetail(id!, signal));
+      return cache.fetch(pokemonCacheKeys.detail(id!), () => fetchPokemonDetail(id!, signal), {
+        signal,
+      });
     },
   },
 ];

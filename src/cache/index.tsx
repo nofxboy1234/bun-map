@@ -7,9 +7,20 @@ type CacheEntry<T> = {
   expiry: number;
 };
 
+type PendingEntry<T> = {
+  promise: Promise<T>;
+  signal?: AbortSignal;
+};
+
+function isAbortError(err: unknown) {
+  return err instanceof DOMException
+    ? err.name === "AbortError"
+    : (err as { name?: string })?.name === "AbortError";
+}
+
 export class SimpleCache {
   private data = new Map<string, CacheEntry<any>>();
-  private pending = new Map<string, Promise<any>>();
+  private pending = new Map<string, PendingEntry<any>>();
   private keyListeners = new Map<string, Set<() => void>>();
 
   subscribe(key: string, listener: () => void) {
@@ -67,26 +78,51 @@ export class SimpleCache {
     return this.pending.has(key);
   }
 
-  async fetch<T>(key: string, fetcher: () => Promise<T>, ttl = 1000 * 10): Promise<T> {
+  async fetch<T>(
+    key: string,
+    fetcher: () => Promise<T>,
+    options?: {
+      ttl?: number;
+      signal?: AbortSignal;
+    },
+  ): Promise<T> {
+    const ttl = options?.ttl ?? 1000 * 10;
+
     if (this.has(key)) {
       return this.data.get(key)!.value;
     }
 
-    if (this.pending.has(key)) return this.pending.get(key);
+    const pending = this.pending.get(key);
+    if (pending) {
+      if (pending.signal?.aborted) {
+        this.pending.delete(key);
+      } else if (options?.signal && pending.signal && pending.signal !== options.signal) {
+      } else {
+        return pending.promise;
+      }
+    }
 
     const promise = fetcher()
       .then((value) => {
         this.data.set(key, { value, expiry: Date.now() + ttl });
-        this.pending.delete(key);
+        if (this.pending.get(key)?.promise === promise) {
+          this.pending.delete(key);
+        }
         this.notify(key);
         return value;
       })
       .catch((err) => {
-        this.pending.delete(key);
+        if (this.pending.get(key)?.promise === promise) {
+          this.pending.delete(key);
+        }
+        // Let subscribers re-evaluate when an in-flight request is aborted.
+        if (isAbortError(err)) {
+          this.notify(key);
+        }
         throw err;
       });
 
-    this.pending.set(key, promise);
+    this.pending.set(key, { promise, signal: options?.signal });
     return promise;
   }
 }

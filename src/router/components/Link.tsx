@@ -22,6 +22,7 @@ export function Link({
   const cache = useCache();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prefetchAbortRef = useRef<AbortController | null>(null);
+  const preservePrefetchRef = useRef(false);
 
   const isActive = url.pathname === href || (href !== "/" && url.pathname.startsWith(href));
 
@@ -30,8 +31,10 @@ export function Link({
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
-      prefetchAbortRef.current?.abort();
-      prefetchAbortRef.current = null;
+      if (!preservePrefetchRef.current) {
+        prefetchAbortRef.current?.abort();
+        prefetchAbortRef.current = null;
+      }
     };
   }, []);
 
@@ -41,6 +44,10 @@ export function Link({
     }
 
     e.preventDefault();
+    preservePrefetchRef.current = true;
+    setTimeout(() => {
+      preservePrefetchRef.current = false;
+    }, 0);
     navigate(href);
   };
 
@@ -73,6 +80,9 @@ export function Link({
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
+    }
+    if (preservePrefetchRef.current) {
+      return;
     }
     prefetchAbortRef.current?.abort();
     prefetchAbortRef.current = null;
