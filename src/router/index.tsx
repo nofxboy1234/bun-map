@@ -6,11 +6,10 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import { SimpleCache, globalCache } from "@/cache";
-import type { RouteConfig } from "./routes";
-
-const historyEvent = new Event("pushstate");
+import type { RouteConfig, RouteMatch } from "./routes";
 
 function subscribe(callback: () => void) {
   window.addEventListener("popstate", callback);
@@ -28,7 +27,7 @@ function getSnapshot() {
 
 type RouterContextType = {
   isNavigating: boolean;
-  navigate: (path: string) => Promise<void>;
+  navigate: (path: string) => void;
   url: URL;
   route: RouteConfig | undefined;
   params: Record<string, string>;
@@ -42,7 +41,7 @@ export function RouterProvider({
   cache = globalCache,
 }: {
   children: React.ReactNode;
-  matchRoute: (path: string) => { route: RouteConfig; params: Record<string, string> } | undefined;
+  matchRoute: (path: string) => RouteMatch | undefined;
   cache?: SimpleCache;
 }) {
   const [isNavigating, setIsNavigating] = useState(() => {
@@ -56,26 +55,20 @@ export function RouterProvider({
 
   const url = useMemo(() => new URL(urlString), [urlString]);
   const match = useMemo(() => matchRoute(url.pathname), [url.pathname, matchRoute]);
+  const loadSeqRef = useRef(0);
 
-  const navigate = useCallback(
-    async (path: string) => {
-      const targetUrl = new URL(path, window.location.origin);
-      const targetMatch = matchRoute(targetUrl.pathname);
+  const navigate = useCallback((path: string) => {
+    const targetUrl = new URL(path, window.location.origin);
+    if (
+      targetUrl.pathname === window.location.pathname &&
+      targetUrl.search === window.location.search
+    ) {
+      return;
+    }
 
-      setIsNavigating(true);
-      try {
-        if (targetMatch?.route.loadData) {
-          await targetMatch.route.loadData(cache, targetMatch.params, targetUrl);
-        }
-      } finally {
-        setIsNavigating(false);
-      }
-
-      window.history.pushState(null, "", path);
-      window.dispatchEvent(historyEvent);
-    },
-    [matchRoute, cache],
-  );
+    window.history.pushState(null, "", path);
+    window.dispatchEvent(new Event("pushstate"));
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -90,17 +83,30 @@ export function RouterProvider({
 
   // Handle Initial Load and Popstate (Back/Forward)
   useEffect(() => {
-    if (match?.route.loadData) {
-      setIsNavigating(true);
-      match.route
-        .loadData(cache, match.params, url)
-        .catch((err) => console.error("Route data load failed", err))
-        .finally(() => {
-          setIsNavigating(false);
-        });
+    let cancelled = false;
+    const currentSeq = ++loadSeqRef.current;
+
+    if (!match?.route.loadData) {
+      setIsNavigating(false);
+      return () => {
+        cancelled = true;
+      };
     }
-    // We only want this to run when the matched route or parameters change,
-    // which happens on initial load, programmatic navigate(), or browser back/forward.
+
+    setIsNavigating(true);
+    loadRouteData(match, cache, url)
+      .catch((err) => {
+        console.error("Route data load failed", err);
+      })
+      .finally(() => {
+        if (!cancelled && currentSeq === loadSeqRef.current) {
+          setIsNavigating(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [match, cache, url]);
 
   return <RouterContext.Provider value={value}>{children}</RouterContext.Provider>;
@@ -117,7 +123,7 @@ export function useRouter() {
       path: url.pathname,
       query: url.searchParams,
       isNavigating: false,
-      navigate: async () => {},
+      navigate: () => {},
       route: undefined,
       params: {},
     };
@@ -130,4 +136,9 @@ export function useRouter() {
     route: context.route,
     params: context.params,
   };
+}
+
+export async function loadRouteData(match: RouteMatch | undefined, cache: SimpleCache, url: URL) {
+  if (!match?.route.loadData) return;
+  await match.route.loadData(cache, match.params, url);
 }

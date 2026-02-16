@@ -1,3 +1,8 @@
+export const pokemonCacheKeys = {
+  list: "pokemon-list",
+  detail: (id: string) => `pokemon-${id}`,
+};
+
 // --- Data Fetchers ---
 export const fetchPokemonList = async () => {
   const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=5");

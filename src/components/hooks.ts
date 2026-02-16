@@ -1,6 +1,6 @@
 import { useSyncExternalStore, useEffect } from "react";
 import { useCache } from "@/cache";
-import { useRouter } from "@/router";
+import { loadRouteData, useRouter } from "@/router";
 
 /**
  * useData now acts as a passive consumer of the cache.
@@ -10,6 +10,7 @@ import { useRouter } from "@/router";
 export function useData<T>(key: string) {
   const cache = useCache();
   const { route, params, url, isNavigating } = useRouter();
+  const routeKey = route?.getCacheKey?.(params, url);
 
   // Subscribe to cache changes for this specific key
   const data = useSyncExternalStore(
@@ -22,12 +23,12 @@ export function useData<T>(key: string) {
     // If data is missing and we have a current route with loadData, try to trigger it.
     // We only do this if we are not currently navigating, to avoid refetching
     // the old route's data just before it unmounts (e.g. if it expired).
-    if (!isNavigating && !data && route?.loadData && !cache.isPending(key)) {
-      route.loadData(cache, params, url).catch(() => {
+    if (!isNavigating && !data && routeKey === key && route?.loadData && !cache.isPending(key)) {
+      loadRouteData({ route, params }, cache, url).catch(() => {
         // Error handling could be added here
       });
     }
-  }, [data, route, params, url, cache, key, isNavigating]);
+  }, [data, route, params, url, cache, key, isNavigating, routeKey]);
 
   return {
     data,

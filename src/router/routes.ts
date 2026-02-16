@@ -1,26 +1,34 @@
 import { SimpleCache } from "@/cache";
-import { fetchPokemonList, fetchPokemonDetail } from "@/dataFetchers/pokemon";
+import { fetchPokemonList, fetchPokemonDetail, pokemonCacheKeys } from "@/dataFetchers/pokemon";
 import { PokemonList } from "@/components/PokemonList";
 import { PokemonDetail } from "@/components/PokemonDetail";
 
 export type RouteConfig = {
   path: string;
   component: React.ComponentType;
+  getCacheKey?: (params: Record<string, string>, url: URL) => string;
   loadData?: (cache: SimpleCache, params: Record<string, string>, url: URL) => Promise<any>;
+};
+
+export type RouteMatch = {
+  route: RouteConfig;
+  params: Record<string, string>;
 };
 
 export const routes: RouteConfig[] = [
   {
     path: "/",
+    getCacheKey: () => pokemonCacheKeys.list,
     component: PokemonList,
-    loadData: (cache) => cache.fetch("pokemon-list", fetchPokemonList),
+    loadData: (cache) => cache.fetch(pokemonCacheKeys.list, fetchPokemonList),
   },
   {
     path: "/pokemon/:id",
+    getCacheKey: (params) => pokemonCacheKeys.detail(params.id!),
     component: PokemonDetail,
     loadData: (cache, params) => {
       const { id } = params;
-      return cache.fetch(`pokemon-${id}`, () => fetchPokemonDetail(id!));
+      return cache.fetch(pokemonCacheKeys.detail(id!), () => fetchPokemonDetail(id!));
     },
   },
 ];
@@ -48,9 +56,7 @@ function matchPath(routePath: string, currentPath: string) {
 }
 
 // Helper to find a matching route
-export function matchRoute(
-  pathname: string,
-): { route: RouteConfig; params: Record<string, string> } | undefined {
+export function matchRoute(pathname: string): RouteMatch | undefined {
   for (const route of routes) {
     // Exact match for root or static paths
     if (route.path === pathname) {

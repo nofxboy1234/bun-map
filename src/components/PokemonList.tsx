@@ -1,8 +1,9 @@
 import { Link } from "@/router/components/Link";
 import { useData } from "@/components/hooks";
+import { pokemonCacheKeys } from "@/dataFetchers/pokemon";
 
 export function PokemonList() {
-  const cacheKey = "pokemon-list";
+  const cacheKey = pokemonCacheKeys.list;
   const { data: list, isLoading } = useData<any>(cacheKey);
 
   if (isLoading || !list) return <div className="loading">Loading list...</div>;

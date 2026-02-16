@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { useRouter } from "@/router";
+import { loadRouteData, useRouter } from "@/router";
 import { matchRoute } from "@/router/routes";
 import { useCache } from "@/cache";
 
@@ -25,18 +25,23 @@ export function Link({
   const isActive = url.pathname === href || (href !== "/" && url.pathname.startsWith(href));
 
   const handleClick = (e: React.MouseEvent) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) {
+      return;
+    }
+
     e.preventDefault();
     navigate(href);
   };
 
   const handleMouseEnter = () => {
     if (prefetchOnHover) {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
       timerRef.current = setTimeout(() => {
         const targetUrl = new URL(href, window.location.origin);
         const match = matchRoute(targetUrl.pathname);
-        if (match?.route.loadData) {
-          match.route.loadData(cache, match.params, targetUrl).catch(() => {});
-        }
+        loadRouteData(match, cache, targetUrl).catch(() => {});
       }, prefetchTimeout);
     }
   };
@@ -50,7 +55,7 @@ export function Link({
   return (
     <a
       href={href}
-      className={`${className} ${isActive ? "active" : ""}`}
+      className={[className, isActive ? "active" : ""].filter(Boolean).join(" ")}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
