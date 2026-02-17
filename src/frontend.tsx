@@ -18,14 +18,9 @@ const app = (
 
 if (import.meta.hot) {
   // With hot module reloading, `import.meta.hot.data` is persisted.
-  const existingRoot = import.meta.hot.data.root as ReturnType<typeof createRoot> | undefined;
-  if (existingRoot) {
-    existingRoot.render(app);
-  } else {
-    const root = createRoot(elem);
-    import.meta.hot.data.root = root;
-    root.render(app);
-  }
+  const root = (import.meta.hot.data.root ??= createRoot(elem));
+  root.render(app);
 } else {
+  // The hot module reloading API is not available in production.
   createRoot(elem).render(app);
 }
