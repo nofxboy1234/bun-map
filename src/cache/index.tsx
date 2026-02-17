@@ -1,23 +1,15 @@
 import { createContext, useContext } from "react";
 
-// --- 1. The Simple Cache System ---
-
 type CacheEntry<T> = {
   value: T;
-  expiry: number;
+  staleAt: number;
+  expiresAt: number;
 };
 
 type PendingEntry<T> = {
   promise: Promise<T>;
   signal?: AbortSignal;
 };
-
-export type SerializedCacheEntry = {
-  value: unknown;
-  expiry: number;
-};
-
-export type SerializedCache = Record<string, SerializedCacheEntry>;
 
 function isAbortError(err: unknown) {
   return err instanceof DOMException
@@ -29,6 +21,8 @@ export class SimpleCache {
   private data = new Map<string, CacheEntry<any>>();
   private pending = new Map<string, PendingEntry<any>>();
   private keyListeners = new Map<string, Set<() => void>>();
+  private staleTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private gcTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
   subscribe(key: string, listener: () => void) {
     if (!this.keyListeners.has(key)) {
@@ -54,83 +48,120 @@ export class SimpleCache {
     }
   }
 
-  get(key: string) {
+  private clearTimers(key: string) {
+    const staleTimer = this.staleTimers.get(key);
+    if (staleTimer) {
+      clearTimeout(staleTimer);
+      this.staleTimers.delete(key);
+    }
+
+    const gcTimer = this.gcTimers.get(key);
+    if (gcTimer) {
+      clearTimeout(gcTimer);
+      this.gcTimers.delete(key);
+    }
+  }
+
+  private scheduleTimers(key: string, entry: CacheEntry<any>) {
+    this.clearTimers(key);
+
+    const now = Date.now();
+    const staleDelay = entry.staleAt - now;
+    if (staleDelay > 0) {
+      const timer = setTimeout(() => {
+        const current = this.data.get(key);
+        if (!current || current.staleAt !== entry.staleAt) {
+          return;
+        }
+        this.notify(key);
+        this.staleTimers.delete(key);
+      }, staleDelay);
+      this.staleTimers.set(key, timer);
+    }
+
+    const gcDelay = entry.expiresAt - now;
+    if (gcDelay > 0) {
+      const timer = setTimeout(() => {
+        const current = this.data.get(key);
+        if (!current || current.expiresAt !== entry.expiresAt) {
+          return;
+        }
+        this.data.delete(key);
+        this.clearTimers(key);
+        this.notify(key);
+      }, gcDelay);
+      this.gcTimers.set(key, timer);
+    }
+  }
+
+  private getEntry(key: string) {
     const entry = this.data.get(key);
     if (!entry) return undefined;
 
-    if (Date.now() > entry.expiry) {
+    if (Date.now() > entry.expiresAt) {
       this.data.delete(key);
+      this.clearTimers(key);
       // Notify asynchronously to avoid triggering re-renders during current render
       queueMicrotask(() => this.notify(key));
       return undefined;
     }
 
-    return entry.value;
+    return entry;
+  }
+
+  get(key: string) {
+    return this.getEntry(key)?.value;
   }
 
   has(key: string) {
-    const entry = this.data.get(key);
-    if (!entry) return false;
+    return !!this.getEntry(key);
+  }
 
-    if (Date.now() > entry.expiry) {
-      this.data.delete(key);
-      queueMicrotask(() => this.notify(key));
-      return false;
-    }
-
-    return true;
+  isStale(key: string) {
+    const entry = this.getEntry(key);
+    if (!entry) return true;
+    return Date.now() > entry.staleAt;
   }
 
   isPending(key: string) {
     return this.pending.has(key);
   }
 
-  dehydrate(): SerializedCache {
-    const now = Date.now();
-    const snapshot: SerializedCache = {};
-
-    for (const [key, entry] of this.data) {
-      if (entry.expiry > now) {
-        snapshot[key] = {
-          value: entry.value,
-          expiry: entry.expiry,
-        };
-      }
-    }
-
-    return snapshot;
-  }
-
-  hydrate(snapshot: SerializedCache | null | undefined) {
-    if (!snapshot) return;
-
-    const now = Date.now();
-    for (const [key, entry] of Object.entries(snapshot)) {
-      if (!entry || typeof entry.expiry !== "number" || entry.expiry <= now) {
-        continue;
-      }
-
-      this.data.set(key, {
-        value: entry.value,
-        expiry: entry.expiry,
-      });
-    }
-  }
-
   async fetch<T>(
     key: string,
     fetcher: () => Promise<T>,
     options?: {
-      ttl?: number;
+      staleTime?: number;
+      gcTime?: number;
       signal?: AbortSignal;
     },
   ): Promise<T> {
-    const ttl = options?.ttl ?? 1000 * 10;
+    const staleTime = options?.staleTime ?? 1000 * 10;
+    const gcTime = Math.max(options?.gcTime ?? staleTime * 6, staleTime);
+    const now = Date.now();
+    const entry = this.getEntry(key);
 
-    if (this.has(key)) {
-      return this.data.get(key)!.value;
+    if (entry) {
+      if (now <= entry.staleAt) {
+        return entry.value;
+      }
+
+      void this.fetchFresh(key, fetcher, { staleTime, gcTime, signal: options?.signal });
+      return entry.value;
     }
 
+    return this.fetchFresh(key, fetcher, { staleTime, gcTime, signal: options?.signal });
+  }
+
+  private async fetchFresh<T>(
+    key: string,
+    fetcher: () => Promise<T>,
+    options: {
+      staleTime: number;
+      gcTime: number;
+      signal?: AbortSignal;
+    },
+  ): Promise<T> {
     const pending = this.pending.get(key);
     if (pending) {
       if (pending.signal?.aborted) {
@@ -143,7 +174,14 @@ export class SimpleCache {
 
     const promise = fetcher()
       .then((value) => {
-        this.data.set(key, { value, expiry: Date.now() + ttl });
+        const now = Date.now();
+        const entry = {
+          value,
+          staleAt: now + options.staleTime,
+          expiresAt: now + options.gcTime,
+        };
+        this.data.set(key, entry);
+        this.scheduleTimers(key, entry);
         if (this.pending.get(key)?.promise === promise) {
           this.pending.delete(key);
         }

@@ -7,7 +7,7 @@ import logo from "@/assets/logo.svg";
 import reactLogo from "@/assets/react.svg";
 
 function normalizeAssetPath(path: string) {
-  // In SSR runtime, Bun can return absolute filesystem paths for imported assets.
+  // Bun can return absolute filesystem paths for imported assets in some runtimes.
   // Map those to public asset URLs so browser requests are valid.
   if (path.includes("/src/assets/")) {
     const fileName = path.split("/").pop();
@@ -22,19 +22,12 @@ const reactLogoPath = normalizeAssetPath(reactLogo);
 
 type AppProps = {
   cache?: SimpleCache;
-  initialPath?: string;
-  staticMode?: boolean;
 };
 
-export function App({ cache = globalCache, initialPath, staticMode = false }: AppProps = {}) {
+export function App({ cache = globalCache }: AppProps = {}) {
   return (
     <CacheProvider cache={cache}>
-      <RouterProvider
-        matchRoute={matchRoute}
-        cache={cache}
-        initialPath={initialPath}
-        staticMode={staticMode}
-      >
+      <RouterProvider matchRoute={matchRoute} cache={cache}>
         <AppContent />
       </RouterProvider>
     </CacheProvider>

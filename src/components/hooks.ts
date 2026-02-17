@@ -1,4 +1,4 @@
-import { useSyncExternalStore, useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useCache } from "@/cache";
 import { loadRouteData, useRouter } from "@/router";
 
@@ -9,9 +9,9 @@ function isAbortError(err: unknown) {
 }
 
 /**
- * useData now acts as a passive consumer of the cache.
- * Data is expected to be pre-loaded by the Router or a Prefetch action.
- * It will also attempt to re-trigger loadData if it finds the cache entry is missing.
+ * useData is primarily a cache consumer.
+ * It can also trigger non-abortable load reconciliation when current-route data
+ * is missing or stale so the UI does not get stuck loading.
  */
 export function useData<T>(key: string) {
   const cache = useCache();
@@ -24,33 +24,32 @@ export function useData<T>(key: string) {
     () => cache.get(key) as T | undefined,
     () => cache.get(key) as T | undefined,
   );
+  const isStale = data !== undefined && cache.isStale(key);
 
   useEffect(() => {
-    // If data is missing and we have a current route with loadData, try to trigger it.
-    // We only do this if we are not currently navigating, to avoid refetching
-    // the old route's data just before it unmounts (e.g. if it expired).
-    if (!isNavigating && !data && routeKey === key && route?.loadData && !cache.isPending(key)) {
-      const controller = new AbortController();
-
-      loadRouteData({ route, params }, cache, url, controller.signal).catch((err) => {
+    if (
+      !isNavigating &&
+      routeKey === key &&
+      route?.loadData &&
+      !cache.isPending(key) &&
+      (data === undefined || isStale)
+    ) {
+      loadRouteData({ route, params }, cache, url).catch((err) => {
         if (isAbortError(err)) {
           return;
         }
-        console.error("Fallback route data load failed", {
+        console.error("Route data reconciliation failed", {
           key,
           path: url.pathname,
           err,
         });
       });
-
-      return () => {
-        controller.abort();
-      };
     }
-  }, [data, route, params, url, cache, key, isNavigating, routeKey]);
+  }, [cache, data, isNavigating, isStale, key, params, route, routeKey, url]);
 
   return {
     data,
     isLoading: !data,
+    isStale,
   };
 }

@@ -11,12 +11,6 @@ import {
 import { SimpleCache, globalCache } from "@/cache";
 import type { RouteConfig, RouteMatch } from "./routes";
 
-const SSR_BASE_URL = "http://localhost";
-
-function getAbsoluteUrl(pathOrUrl?: string) {
-  return new URL(pathOrUrl || "/", SSR_BASE_URL).href;
-}
-
 function isAbortError(err: unknown) {
   return err instanceof DOMException
     ? err.name === "AbortError"
@@ -37,39 +31,32 @@ export function RouterProvider({
   children,
   matchRoute,
   cache = globalCache,
-  initialPath,
-  staticMode = false,
 }: {
   children: React.ReactNode;
   matchRoute: (path: string) => RouteMatch | undefined;
   cache?: SimpleCache;
-  initialPath?: string;
-  staticMode?: boolean;
 }) {
   const initialUrlString = useMemo(() => {
     if (typeof window !== "undefined") {
       return window.location.href;
     }
 
-    return getAbsoluteUrl(initialPath);
-  }, [initialPath]);
+    return "http://localhost/";
+  }, []);
 
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      if (staticMode || typeof window === "undefined") {
-        return () => {};
-      }
+  const subscribe = useCallback((callback: () => void) => {
+    if (typeof window === "undefined") {
+      return () => {};
+    }
 
-      window.addEventListener("popstate", callback);
-      window.addEventListener("pushstate", callback);
+    window.addEventListener("popstate", callback);
+    window.addEventListener("pushstate", callback);
 
-      return () => {
-        window.removeEventListener("popstate", callback);
-        window.removeEventListener("pushstate", callback);
-      };
-    },
-    [staticMode],
-  );
+    return () => {
+      window.removeEventListener("popstate", callback);
+      window.removeEventListener("pushstate", callback);
+    };
+  }, []);
 
   const getClientSnapshot = useCallback(() => {
     if (typeof window === "undefined") {
@@ -95,25 +82,22 @@ export function RouterProvider({
   const loadSeqRef = useRef(0);
   const loadAbortRef = useRef<AbortController | null>(null);
 
-  const navigate = useCallback(
-    (path: string) => {
-      if (staticMode || typeof window === "undefined") {
-        return;
-      }
+  const navigate = useCallback((path: string) => {
+    if (typeof window === "undefined") {
+      return;
+    }
 
-      const targetUrl = new URL(path, window.location.origin);
-      if (
-        targetUrl.pathname === window.location.pathname &&
-        targetUrl.search === window.location.search
-      ) {
-        return;
-      }
+    const targetUrl = new URL(path, window.location.origin);
+    if (
+      targetUrl.pathname === window.location.pathname &&
+      targetUrl.search === window.location.search
+    ) {
+      return;
+    }
 
-      window.history.pushState(null, "", path);
-      window.dispatchEvent(new Event("pushstate"));
-    },
-    [staticMode],
-  );
+    window.history.pushState(null, "", path);
+    window.dispatchEvent(new Event("pushstate"));
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -177,7 +161,7 @@ export function RouterProvider({
 export function useRouter() {
   const context = useContext(RouterContext);
   if (!context) {
-    const fallbackUrl = typeof window !== "undefined" ? window.location.href : getAbsoluteUrl("/");
+    const fallbackUrl = typeof window !== "undefined" ? window.location.href : "http://localhost/";
     const url = new URL(fallbackUrl);
     return {
       url,
