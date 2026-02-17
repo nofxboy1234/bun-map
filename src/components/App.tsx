@@ -6,20 +6,6 @@ import "@/index.css";
 import logo from "@/assets/logo.svg";
 import reactLogo from "@/assets/react.svg";
 
-function normalizeAssetPath(path: string) {
-  // Bun can return absolute filesystem paths for imported assets in some runtimes.
-  // Map those to public asset URLs so browser requests are valid.
-  if (path.includes("/src/assets/")) {
-    const fileName = path.split("/").pop();
-    return fileName ? `/assets/${fileName}` : path;
-  }
-
-  return path;
-}
-
-const bunLogoPath = normalizeAssetPath(logo);
-const reactLogoPath = normalizeAssetPath(reactLogo);
-
 type AppProps = {
   cache?: SimpleCache;
 };
@@ -55,8 +41,8 @@ function AppContent() {
       </header>
 
       <div className="logo-container">
-        <img src={bunLogoPath} alt="Bun Logo" className="logo bun-logo" />
-        <img src={reactLogoPath} alt="React Logo" className="logo react-logo" />
+        <img src={logo} alt="Bun Logo" className="logo bun-logo" />
+        <img src={reactLogo} alt="React Logo" className="logo react-logo" />
       </div>
 
       <button onClick={() => setNum(num + 1)}>Count</button>

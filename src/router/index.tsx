@@ -36,19 +36,9 @@ export function RouterProvider({
   matchRoute: (path: string) => RouteMatch | undefined;
   cache?: SimpleCache;
 }) {
-  const initialUrlString = useMemo(() => {
-    if (typeof window !== "undefined") {
-      return window.location.href;
-    }
-
-    return "http://localhost/";
-  }, []);
+  const initialUrlString = useMemo(() => window.location.href, []);
 
   const subscribe = useCallback((callback: () => void) => {
-    if (typeof window === "undefined") {
-      return () => {};
-    }
-
     window.addEventListener("popstate", callback);
     window.addEventListener("pushstate", callback);
 
@@ -58,15 +48,7 @@ export function RouterProvider({
     };
   }, []);
 
-  const getClientSnapshot = useCallback(() => {
-    if (typeof window === "undefined") {
-      return initialUrlString;
-    }
-
-    return window.location.href;
-  }, [initialUrlString]);
-
-  const getServerSnapshot = useCallback(() => initialUrlString, [initialUrlString]);
+  const getClientSnapshot = useCallback(() => window.location.href, []);
 
   const [isNavigating, setIsNavigating] = useState(() => {
     const currentUrl = new URL(initialUrlString);
@@ -75,7 +57,7 @@ export function RouterProvider({
   });
 
   // Uses useSyncExternalStore to subscribe to URL changes efficiently
-  const urlString = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
+  const urlString = useSyncExternalStore(subscribe, getClientSnapshot);
 
   const url = useMemo(() => new URL(urlString), [urlString]);
   const match = useMemo(() => matchRoute(url.pathname), [url.pathname, matchRoute]);
@@ -83,10 +65,6 @@ export function RouterProvider({
   const loadAbortRef = useRef<AbortController | null>(null);
 
   const navigate = useCallback((path: string) => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
     const targetUrl = new URL(path, window.location.origin);
     if (
       targetUrl.pathname === window.location.pathname &&
@@ -161,7 +139,7 @@ export function RouterProvider({
 export function useRouter() {
   const context = useContext(RouterContext);
   if (!context) {
-    const fallbackUrl = typeof window !== "undefined" ? window.location.href : "http://localhost/";
+    const fallbackUrl = window.location.href;
     const url = new URL(fallbackUrl);
     return {
       url,

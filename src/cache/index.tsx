@@ -113,10 +113,6 @@ export class SimpleCache {
     return this.getEntry(key)?.value;
   }
 
-  has(key: string) {
-    return !!this.getEntry(key);
-  }
-
   isStale(key: string) {
     const entry = this.getEntry(key);
     if (!entry) return true;
