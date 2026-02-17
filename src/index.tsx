@@ -4,6 +4,12 @@ import index from "@/index.html";
 import { App } from "@/components/App";
 import { SimpleCache } from "@/cache";
 import { matchRoute } from "@/router/routes";
+import {
+  createClientHtmlTemplate,
+  createProductionBrowserBuildConfig,
+  resolveClientBundlePaths,
+  toNormalizedOutputPath,
+} from "@/builds";
 
 type ClientAsset = {
   filePath: string;
@@ -20,38 +26,8 @@ const clientOutdir = "/tmp/bun-map-ssr-client";
 let clientHtmlTemplate = "";
 const clientAssets = new Map<string, ClientAsset>();
 
-function toNormalizedOutputPath(buildPath: string, normalizedOutdir: string) {
-  const normalizedBuildPath = buildPath.replaceAll("\\", "/");
-
-  if (normalizedBuildPath.startsWith(normalizedOutdir)) {
-    return normalizedBuildPath.slice(normalizedOutdir.length);
-  }
-
-  if (normalizedBuildPath.startsWith("./")) {
-    return normalizedBuildPath.slice(1);
-  }
-
-  if (normalizedBuildPath.startsWith("/")) {
-    return normalizedBuildPath;
-  }
-
-  return `/${normalizedBuildPath}`;
-}
-
 if (isProd && isSSRMode) {
-  const clientBuild = await Bun.build({
-    entrypoints: ["./src/index.html"],
-    target: "browser",
-    splitting: false,
-    sourcemap: "none",
-    minify: true,
-    publicPath: "/",
-    naming: {
-      asset: "assets/[name].[ext]",
-    },
-    outdir: clientOutdir,
-    env: "BUN_PUBLIC_*",
-  });
+  const clientBuild = await Bun.build(createProductionBrowserBuildConfig(clientOutdir));
 
   if (!clientBuild.success) {
     for (const log of clientBuild.logs) {
@@ -61,14 +37,11 @@ if (isProd && isSSRMode) {
   }
 
   const normalizedOutdir = clientOutdir.replaceAll("\\", "/");
+  const { scriptPath, stylePath } = resolveClientBundlePaths(clientBuild.outputs, clientOutdir);
+  clientHtmlTemplate = await createClientHtmlTemplate(scriptPath, stylePath);
 
   for (const output of clientBuild.outputs) {
     const normalizedPath = toNormalizedOutputPath(output.path, normalizedOutdir);
-
-    if (normalizedPath === "/index.html") {
-      clientHtmlTemplate = await Bun.file(output.path).text();
-      continue;
-    }
 
     clientAssets.set(normalizedPath, {
       filePath: output.path,
@@ -77,7 +50,7 @@ if (isProd && isSSRMode) {
   }
 
   if (!clientHtmlTemplate) {
-    throw new Error("Missing index.html in client build output.");
+    throw new Error("Failed to create SSR client HTML template.");
   }
 }
 

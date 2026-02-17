@@ -12,8 +12,8 @@
     "start": "NODE_ENV=production bun src/index.tsx",
     "start:ssr": "NODE_ENV=production SERVER_MODE=ssr bun src/index.tsx",
     "start:spa": "NODE_ENV=production SERVER_MODE=spa bun src/index.tsx",
-    "build:static": "bun src/buildStaticFrontend.ts",
-    "preview:static": "bun src/previewStatic.ts",
+    "build:static": "NODE_ENV=production bun src/buildStaticFrontend.ts",
+    "preview:static": "NODE_ENV=production bun src/previewStatic.ts",
     "clean": "rm -rf dist && echo 'Cleaned dist.'"
   },
   "dependencies": {

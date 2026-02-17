@@ -6,6 +6,7 @@ const port = Number(process.env.PORT || 3000);
 
 const server = serve({
   port,
+
   async fetch(req) {
     const url = new URL(req.url);
     const requestPath = decodeURIComponent(url.pathname);
@@ -26,6 +27,14 @@ const server = serve({
         "Content-Type": "text/html; charset=utf-8",
       },
     });
+  },
+
+  development: {
+    // Enable browser hot reloading in development
+    hmr: false,
+
+    // Echo console logs from the browser to the server
+    console: false,
   },
 });
 
