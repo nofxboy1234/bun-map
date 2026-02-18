@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "update:codex": "npm i -g @openai/codex@latest",
     "lint": "oxlint --fix",
     "fmt": "oxfmt",
     "tsgo": "bunx --bun tsgo",
