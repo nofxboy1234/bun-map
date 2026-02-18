@@ -108,10 +108,12 @@ export class SimpleCache {
     if (!this.keyListeners.has(key)) {
       this.keyListeners.set(key, new Set());
     }
+
     this.keyListeners.get(key)!.add(listener);
 
     return () => {
       const listeners = this.keyListeners.get(key);
+
       if (listeners) {
         listeners.delete(listener);
         if (listeners.size === 0) {
@@ -123,6 +125,7 @@ export class SimpleCache {
 
   private notify(key: string) {
     const listeners = this.keyListeners.get(key);
+
     if (listeners) {
       listeners.forEach((l) => l());
     }
@@ -130,12 +133,14 @@ export class SimpleCache {
 
   private clearTimers(key: string) {
     const staleTimer = this.staleTimers.get(key);
+
     if (staleTimer) {
       clearTimeout(staleTimer);
       this.staleTimers.delete(key);
     }
 
     const gcTimer = this.gcTimers.get(key);
+
     if (gcTimer) {
       clearTimeout(gcTimer);
       this.gcTimers.delete(key);
@@ -155,25 +160,32 @@ export class SimpleCache {
 
     const now = Date.now();
     const staleDelay = entry.staleAt - now;
+
     if (staleDelay > 0) {
       const timer = setTimeout(() => {
         const current = this.data.get(key);
+
         if (!current || current.staleAt !== entry.staleAt) {
           return;
         }
+
         this.notify(key);
         this.staleTimers.delete(key);
       }, staleDelay);
+
       this.staleTimers.set(key, timer);
     }
 
     const gcDelay = entry.expiresAt - now;
+
     if (gcDelay > 0) {
       const timer = setTimeout(() => {
         const current = this.data.get(key);
+
         if (!current || current.expiresAt !== entry.expiresAt) {
           return;
         }
+
         this.data.delete(key);
         this.clearTimers(key);
         this.notify(key);
@@ -204,6 +216,7 @@ export class SimpleCache {
   isStale(key: string) {
     const entry = this.getEntry(key);
     if (!entry) return true;
+
     return Date.now() > entry.staleAt;
   }
 
@@ -249,6 +262,7 @@ export class SimpleCache {
         retryPolicy,
         dedupeMode,
       });
+
       return entry.value;
     }
 
@@ -274,6 +288,7 @@ export class SimpleCache {
   ): Promise<T> {
     const generation = this.getGeneration(key);
     const pending = this.pending.get(key);
+
     if (pending) {
       if (pending.signal?.aborted) {
         this.pending.delete(key);
@@ -294,21 +309,27 @@ export class SimpleCache {
             this.pending.delete(key);
           }
           this.notify(key);
+
           return value;
         }
 
         const now = Date.now();
+
         const entry = {
           value,
           staleAt: now + options.staleTime,
           expiresAt: now + options.gcTime,
         };
+
         this.data.set(key, entry);
         this.scheduleTimers(key, entry);
+
         if (this.pending.get(key)?.promise === promise) {
           this.pending.delete(key);
         }
+
         this.notify(key);
+
         return value;
       })
       .catch((err) => {
@@ -317,6 +338,7 @@ export class SimpleCache {
             this.pending.delete(key);
           }
           this.notify(key);
+
           throw err;
         }
 
@@ -324,11 +346,13 @@ export class SimpleCache {
           this.pending.delete(key);
         }
         this.notify(key);
+
         throw err;
       });
 
     this.pending.set(key, { promise, signal: options?.signal });
     this.notify(key);
+
     return promise;
   }
 
@@ -338,6 +362,7 @@ export class SimpleCache {
     signal?: AbortSignal,
   ) {
     let attempt = 0;
+
     while (true) {
       try {
         return await fetcher();

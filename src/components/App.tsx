@@ -30,7 +30,6 @@ function AppContent() {
 
   if (route) {
     const Component = route.component;
-
     content = <Component />;
   } else {
     content = <div>Not Found</div>;
@@ -50,6 +49,7 @@ function AppContent() {
       <button onClick={() => setNum(num + 1)}>Count</button>
       <div>{num}</div>
       <a href="/users/duke">Duke</a>
+
       <main>{content}</main>
     </div>
   );
