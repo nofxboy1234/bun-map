@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { useCache } from "@/cache";
 import { loadRouteData, useRouter } from "@/router";
 
@@ -13,20 +13,30 @@ function isAbortError(err: unknown) {
  * It can also trigger non-abortable load reconciliation when current-route data
  * is missing or stale so the UI does not get stuck loading.
  */
-export function useData<T>(key: string) {
+type UseDataOptions = {
+  revalidateOnFocus?: boolean;
+  revalidateOnReconnect?: boolean;
+};
+
+export function useData<T>(key: string, options?: UseDataOptions) {
   const cache = useCache();
-  const { route, params, url, isNavigating } = useRouter();
-  const routeKey = route?.getCacheKey?.(params, url);
+  const { route, params, search, url, isNavigating } = useRouter();
+  const revalidateOnFocus = options?.revalidateOnFocus ?? false;
+  const revalidateOnReconnect = options?.revalidateOnReconnect ?? false;
+  const routeKey = route?.getCacheKey?.(params, search, url);
 
   // Subscribe to cache changes for this specific key
   const data = useSyncExternalStore(
     (notify: () => void) => cache.subscribe(key, notify),
     () => cache.get(key) as T | undefined,
-    () => cache.get(key) as T | undefined,
+  );
+  const isFetching = useSyncExternalStore(
+    (notify: () => void) => cache.subscribe(key, notify),
+    () => cache.isPending(key),
   );
   const isStale = data !== undefined && cache.isStale(key);
 
-  useEffect(() => {
+  const reconcileCurrentRoute = useCallback(() => {
     if (
       !isNavigating &&
       routeKey === key &&
@@ -47,9 +57,59 @@ export function useData<T>(key: string) {
     }
   }, [cache, data, isNavigating, isStale, key, params, route, routeKey, url]);
 
+  useEffect(() => {
+    reconcileCurrentRoute();
+  }, [reconcileCurrentRoute]);
+
+  useEffect(() => {
+    if ((!revalidateOnFocus && !revalidateOnReconnect) || !route?.loadData || routeKey !== key) {
+      return;
+    }
+
+    const maybeRevalidate = () => {
+      reconcileCurrentRoute();
+    };
+
+    const onVisibilityChange = () => {
+      if (revalidateOnFocus && document.visibilityState === "visible") {
+        maybeRevalidate();
+      }
+    };
+
+    const onOnline = () => {
+      if (revalidateOnReconnect) {
+        maybeRevalidate();
+      }
+    };
+
+    if (revalidateOnFocus) {
+      document.addEventListener("visibilitychange", onVisibilityChange);
+    }
+    if (revalidateOnReconnect) {
+      window.addEventListener("online", onOnline);
+    }
+
+    return () => {
+      if (revalidateOnFocus) {
+        document.removeEventListener("visibilitychange", onVisibilityChange);
+      }
+      if (revalidateOnReconnect) {
+        window.removeEventListener("online", onOnline);
+      }
+    };
+  }, [
+    key,
+    revalidateOnFocus,
+    revalidateOnReconnect,
+    reconcileCurrentRoute,
+    route?.loadData,
+    routeKey,
+  ]);
+
   return {
     data,
     isLoading: !data,
+    isFetching,
     isStale,
   };
 }

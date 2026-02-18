@@ -9,7 +9,7 @@ import {
   useRef,
 } from "react";
 import { SimpleCache, globalCache } from "@/cache";
-import type { RouteConfig, RouteMatch } from "./routes";
+import { validateRouteSearch, type RouteConfig, type RouteMatch, type RouteSearch } from "./routes";
 
 function isAbortError(err: unknown) {
   return err instanceof DOMException
@@ -23,6 +23,7 @@ type RouterContextType = {
   url: URL;
   route: RouteConfig | undefined;
   params: Record<string, string>;
+  search: RouteSearch;
 };
 
 const RouterContext = createContext<RouterContextType | null>(null);
@@ -61,6 +62,9 @@ export function RouterProvider({
 
   const url = useMemo(() => new URL(urlString), [urlString]);
   const match = useMemo(() => matchRoute(url.pathname), [url.pathname, matchRoute]);
+  const search = useMemo(() => validateRouteSearch(match?.route, url), [match?.route, url]);
+  const route = match?.route;
+  const params = useMemo(() => match?.params ?? {}, [match]);
   const loadSeqRef = useRef(0);
   const loadAbortRef = useRef<AbortController | null>(null);
 
@@ -82,10 +86,11 @@ export function RouterProvider({
       isNavigating,
       navigate,
       url,
-      route: match?.route,
-      params: match?.params || {},
+      route,
+      params,
+      search,
     }),
-    [isNavigating, url, match, navigate],
+    [isNavigating, navigate, params, route, search, url],
   );
 
   // Handle Initial Load and Popstate (Back/Forward)
@@ -149,6 +154,7 @@ export function useRouter() {
       navigate: () => {},
       route: undefined,
       params: {},
+      search: {},
     };
   }
 
@@ -158,6 +164,7 @@ export function useRouter() {
     query: context.url.searchParams,
     route: context.route,
     params: context.params,
+    search: context.search,
   };
 }
 
@@ -168,5 +175,6 @@ export async function loadRouteData(
   signal?: AbortSignal,
 ) {
   if (!match?.route.loadData) return;
-  await match.route.loadData(cache, match.params, url, signal);
+  const search = validateRouteSearch(match.route, url);
+  await match.route.loadData(cache, match.params, search, url, signal);
 }
