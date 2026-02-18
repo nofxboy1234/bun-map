@@ -8,7 +8,8 @@
     "lint": "oxlint --fix",
     "fmt": "oxfmt",
     "tsgo": "bunx --bun tsgo",
-    "dev": "bun --hot src/index.tsx",
+    "dev": "BUN_PUBLIC_REACT_STRICT_MODE_DEV=0 bun --hot src/index.tsx",
+    "dev:strict": "BUN_PUBLIC_REACT_STRICT_MODE_DEV=1 bun --hot src/index.tsx",
     "dev:debug": "bun --inspect-brk src/index.tsx",
     "start": "NODE_ENV=production bun src/index.tsx",
     "clean": "rm -rf dist && echo 'Cleaned dist.'"
