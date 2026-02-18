@@ -20,7 +20,6 @@ This is a Bun + React + TypeScript app. Most code lives in `src/`.
 - `bun run dev`: run local dev server with Strict Mode disabled.
 - `bun run dev:strict`: run local dev server with Strict Mode enabled.
 - `bun run dev:debug`: run with debugger attached (`--inspect-brk`), Strict Mode disabled.
-- `bun run start`: run the production server from `src/index.tsx`.
 - `bun run build`: build a production bundle into `dist/` with `BUN_PUBLIC_REACT_STRICT_MODE_DEV=0`.
 - `bun run start:dist`: run the bundled server from `dist/index.js`.
 - `bun run lint`: run `oxlint --fix` for lint checks and auto-fixes.
