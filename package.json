@@ -12,7 +12,7 @@
     "dev:strict": "BUN_PUBLIC_REACT_STRICT_MODE_DEV=1 bun --hot src/index.tsx",
     "dev:debug": "BUN_PUBLIC_REACT_STRICT_MODE_DEV=0 bun --inspect-brk src/index.tsx",
     "start": "NODE_ENV=production bun src/index.tsx",
-    "build": "bun build --target=bun --production --outdir=dist --public-path=/ src/index.tsx",
+    "build": "BUN_PUBLIC_REACT_STRICT_MODE_DEV=0 bun build --target=bun --production --outdir=dist --public-path=/ --env=BUN_PUBLIC_* src/index.tsx",
     "start:dist": "cd dist && NODE_ENV=production bun index.js",
     "clean": "rm -rf dist && echo 'Cleaned dist.'"
   },

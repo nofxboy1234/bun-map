@@ -11,19 +11,24 @@ This is a Bun + React + TypeScript app. Most code lives in `src/`.
 - `src/dataFetchers/`: API/data access helpers (for example `pokemon.ts`).
 - `src/cache/`: cache-related logic.
 - `src/assets/`: static assets (SVGs).
-- `src/buildStaticFrontend.ts` and `src/builds.ts`: static build scripts.
+- `src/index.html`: Bun HTML entry used for client bundling.
+- `src/index.css`: global app styles.
 
 ## Build, Test, and Development Commands
 
 - `bun install`: install dependencies.
-- `bun run dev`: run local development server with hot reload.
-- `bun run dev:debug`: run with debugger attached (`--inspect-brk`).
-- `bun run start`: run in production mode locally.
-- `bun run build:static`: generate static frontend output.
+- `bun run dev`: run local dev server with Strict Mode disabled.
+- `bun run dev:strict`: run local dev server with Strict Mode enabled.
+- `bun run dev:debug`: run with debugger attached (`--inspect-brk`), Strict Mode disabled.
+- `bun run start`: run the production server from `src/index.tsx`.
+- `bun run build`: build a production bundle into `dist/` with `BUN_PUBLIC_REACT_STRICT_MODE_DEV=0`.
+- `bun run start:dist`: run the bundled server from `dist/index.js`.
 - `bun run lint`: run `oxlint --fix` for lint checks and auto-fixes.
 - `bun run fmt`: format code with `oxfmt`.
 - `bun run clean`: remove `dist/`.
-- `bun run tsgo`: type-check the project
+- `bun run tsgo`: type-check the project.
+
+Before running `bun run build`, always run `bun run clean` first.
 
 ## Coding Style & Naming Conventions
 
