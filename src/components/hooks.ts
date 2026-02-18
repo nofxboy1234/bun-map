@@ -37,8 +37,7 @@ export function useData<T>(key: string, options?: UseDataOptions) {
   const isStale = data !== undefined && cache.isStale(key);
 
   const reconcileCurrentRoute = useCallback(() => {
-    const hasData = cache.get(key) !== undefined;
-    const staleOrMissing = !hasData || cache.isStale(key);
+    const staleOrMissing = data === undefined || isStale || cache.isStale(key);
 
     if (
       !isNavigating &&
@@ -58,7 +57,7 @@ export function useData<T>(key: string, options?: UseDataOptions) {
         });
       });
     }
-  }, [cache, isNavigating, key, params, route, routeKey, url]);
+  }, [cache, data, isNavigating, isStale, key, params, route, routeKey, url]);
 
   useEffect(() => {
     reconcileCurrentRoute();

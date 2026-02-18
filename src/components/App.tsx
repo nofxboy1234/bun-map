@@ -1,7 +1,9 @@
+import { useState } from "react";
+
 import { useRouter, RouterProvider } from "@/router";
 import { matchRoute } from "@/router/routes";
-import { useState } from "react";
 import { CacheProvider, globalCache, type SimpleCache } from "@/cache";
+
 import "@/index.css";
 import logo from "@/assets/logo.svg";
 import reactLogo from "@/assets/react.svg";
