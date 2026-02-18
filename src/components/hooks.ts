@@ -37,12 +37,15 @@ export function useData<T>(key: string, options?: UseDataOptions) {
   const isStale = data !== undefined && cache.isStale(key);
 
   const reconcileCurrentRoute = useCallback(() => {
+    const hasData = cache.get(key) !== undefined;
+    const staleOrMissing = !hasData || cache.isStale(key);
+
     if (
       !isNavigating &&
       routeKey === key &&
       route?.loadData &&
       !cache.isPending(key) &&
-      (data === undefined || isStale)
+      staleOrMissing
     ) {
       loadRouteData({ route, params }, cache, url).catch((err) => {
         if (isAbortError(err)) {
@@ -55,7 +58,7 @@ export function useData<T>(key: string, options?: UseDataOptions) {
         });
       });
     }
-  }, [cache, data, isNavigating, isStale, key, params, route, routeKey, url]);
+  }, [cache, isNavigating, key, params, route, routeKey, url]);
 
   useEffect(() => {
     reconcileCurrentRoute();

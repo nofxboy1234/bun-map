@@ -67,6 +67,4 @@ if (isDevelopment && process.stdin.isTTY) {
 }
 
 console.log(`🚀 Server running at ${server.url}`);
-console.log(
-  `🧭 Server mode: spa (${isDevelopment ? "development" : "production"})`,
-);
+console.log(`🧭 Server mode: spa (${isDevelopment ? "development" : "production"})`);
