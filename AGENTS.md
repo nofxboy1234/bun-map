@@ -17,10 +17,10 @@ This is a Bun + React + TypeScript app. Most code lives in `src/`.
 ## Build, Test, and Development Commands
 
 - `bun install`: install dependencies.
-- `bun run dev`: run local dev server with Strict Mode disabled.
-- `bun run dev:strict`: run local dev server with Strict Mode enabled.
-- `bun run dev:debug`: run with debugger attached (`--inspect-brk`), Strict Mode disabled.
-- `bun run build`: build a production bundle into `dist/` with `BUN_PUBLIC_REACT_STRICT_MODE_DEV=0`.
+- `bun run update:codex`: update the global Codex CLI to latest.
+- `bun run dev`: run local dev server with hot reload.
+- `bun run dev:debug`: run with debugger attached (`--inspect-brk`).
+- `bun run build`: build a production bundle into `dist/`.
 - `bun run start:dist`: run the bundled server from `dist/index.js`.
 - `bun run lint`: run `oxlint --fix` for lint checks and auto-fixes.
 - `bun run fmt`: format code with `oxfmt`.
