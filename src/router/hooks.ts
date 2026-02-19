@@ -1,12 +1,7 @@
 import { useSyncExternalStore, useMemo, useState, useEffect, useCallback, useRef } from "react";
 import type { SimpleCache } from "@/cache";
+import { isAbortError } from "@/utils/errors";
 import { validateRouteSearch, type RouteConfig, type RouteMatch, type RouteSearch } from "./routes";
-
-function isAbortError(err: unknown) {
-  return err instanceof DOMException
-    ? err.name === "AbortError"
-    : (err as { name?: string })?.name === "AbortError";
-}
 
 export function useRouterUrlString() {
   const subscribe = useCallback((callback: () => void) => {

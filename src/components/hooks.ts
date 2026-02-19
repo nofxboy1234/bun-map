@@ -7,12 +7,7 @@ import {
   type PokemonListResponse,
 } from "@/dataFetchers/pokemon";
 import { getPokemonListLimit } from "@/router/routes";
-
-function isAbortError(err: unknown) {
-  return err instanceof DOMException
-    ? err.name === "AbortError"
-    : (err as { name?: string })?.name === "AbortError";
-}
+import { isAbortError } from "@/utils/errors";
 
 /**
  * useData is primarily a cache consumer.
@@ -28,6 +23,15 @@ const ROUTE_REVALIDATE_OPTIONS: UseDataOptions = {
   revalidateOnFocus: true,
   revalidateOnReconnect: true,
 };
+
+function getRequiredRouteParam(params: Record<string, string>, key: string) {
+  const value = params[key];
+  if (!value) {
+    throw new Error(`Missing required route param "${key}".`);
+  }
+
+  return value;
+}
 
 export function useData<T>(key: string, options?: UseDataOptions) {
   const cache = useCache();
@@ -121,7 +125,7 @@ export function useData<T>(key: string, options?: UseDataOptions) {
 
   return {
     data,
-    isLoading: !data,
+    isLoading: data === undefined,
     isFetching,
     isStale,
   };
@@ -176,8 +180,8 @@ export function usePokemonListState() {
 
 export function usePokemonDetailState() {
   const { params } = useRouter();
-  const id = params.id;
-  const cacheKey = useMemo(() => pokemonCacheKeys.detail(id!), [id]);
+  const id = getRequiredRouteParam(params, "id");
+  const cacheKey = useMemo(() => pokemonCacheKeys.detail(id), [id]);
   const { data: pokemon, isLoading } = useData<PokemonDetailResponse>(
     cacheKey,
     ROUTE_REVALIDATE_OPTIONS,

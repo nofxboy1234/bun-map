@@ -2,12 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useCache } from "@/cache";
 import { loadRouteData, useRouter } from "@/router";
 import { matchRoute } from "@/router/routes";
-
-function isAbortError(err: unknown) {
-  return err instanceof DOMException
-    ? err.name === "AbortError"
-    : (err as { name?: string })?.name === "AbortError";
-}
+import { isAbortError } from "@/utils/errors";
 
 type UseLinkInteractionsOptions = {
   href: string;
