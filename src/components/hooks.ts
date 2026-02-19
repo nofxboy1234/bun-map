@@ -1,6 +1,12 @@
-import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useCache } from "@/cache";
 import { loadRouteData, useRouter } from "@/router";
+import {
+  pokemonCacheKeys,
+  type PokemonDetailResponse,
+  type PokemonListResponse,
+} from "@/dataFetchers/pokemon";
+import { getPokemonListLimit } from "@/router/routes";
 
 function isAbortError(err: unknown) {
   return err instanceof DOMException
@@ -16,6 +22,11 @@ function isAbortError(err: unknown) {
 type UseDataOptions = {
   revalidateOnFocus?: boolean;
   revalidateOnReconnect?: boolean;
+};
+
+const ROUTE_REVALIDATE_OPTIONS: UseDataOptions = {
+  revalidateOnFocus: true,
+  revalidateOnReconnect: true,
 };
 
 export function useData<T>(key: string, options?: UseDataOptions) {
@@ -113,5 +124,67 @@ export function useData<T>(key: string, options?: UseDataOptions) {
     isLoading: !data,
     isFetching,
     isStale,
+  };
+}
+
+export function useAppContentState() {
+  const { route } = useRouter();
+  const [count, setCount] = useState(0);
+
+  const incrementCount = useCallback(() => {
+    setCount((value) => value + 1);
+  }, []);
+
+  return {
+    count,
+    incrementCount,
+    routeComponent: route?.component,
+  };
+}
+
+type PokemonListItem = {
+  id: string | undefined;
+  name: string;
+};
+
+export function usePokemonListState() {
+  const { search } = useRouter();
+  const limit = getPokemonListLimit(search);
+  const cacheKey = useMemo(() => pokemonCacheKeys.list(limit), [limit]);
+  const { data: list, isLoading } = useData<PokemonListResponse>(
+    cacheKey,
+    ROUTE_REVALIDATE_OPTIONS,
+  );
+
+  const items = useMemo<PokemonListItem[]>(() => {
+    if (!list) {
+      return [];
+    }
+
+    return list.results.map((pokemon) => ({
+      id: pokemon.url.split("/").filter(Boolean).pop(),
+      name: pokemon.name,
+    }));
+  }, [list]);
+
+  return {
+    list,
+    items,
+    isLoading,
+  };
+}
+
+export function usePokemonDetailState() {
+  const { params } = useRouter();
+  const id = params.id;
+  const cacheKey = useMemo(() => pokemonCacheKeys.detail(id!), [id]);
+  const { data: pokemon, isLoading } = useData<PokemonDetailResponse>(
+    cacheKey,
+    ROUTE_REVALIDATE_OPTIONS,
+  );
+
+  return {
+    pokemon,
+    isLoading,
   };
 }

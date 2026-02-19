@@ -1,8 +1,7 @@
-import { useState } from "react";
-
-import { useRouter, RouterProvider } from "@/router";
+import { RouterProvider } from "@/router";
 import { matchRoute } from "@/router/routes";
 import { CacheProvider, globalCache, type SimpleCache } from "@/cache";
+import { useAppContentState } from "@/components/hooks";
 
 import "@/index.css";
 import logo from "@/assets/logo.svg";
@@ -23,17 +22,9 @@ export function App({ cache = globalCache }: AppProps = {}) {
 }
 
 function AppContent() {
-  const { route } = useRouter();
-  const [num, setNum] = useState(0);
-
-  let content;
-
-  if (route) {
-    const Component = route.component;
-    content = <Component />;
-  } else {
-    content = <div>Not Found</div>;
-  }
+  const { count, incrementCount, routeComponent } = useAppContentState();
+  const Component = routeComponent;
+  const content = Component ? <Component /> : <div>Not Found</div>;
 
   return (
     <div className="app-container">
@@ -46,8 +37,8 @@ function AppContent() {
         <img src={reactLogo} alt="React Logo" className="logo react-logo" />
       </div>
 
-      <button onClick={() => setNum(num + 1)}>Count</button>
-      <div>{num}</div>
+      <button onClick={incrementCount}>Count</button>
+      <div>{count}</div>
       <a href="/users/duke">Duke</a>
 
       <main>{content}</main>

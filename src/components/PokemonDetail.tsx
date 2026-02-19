@@ -1,18 +1,8 @@
-import { useRouter } from "@/router";
 import { Link } from "@/router/components/Link";
-import { useData } from "@/components/hooks";
-import type { PokemonDetailResponse } from "@/dataFetchers/pokemon";
-import { pokemonCacheKeys } from "@/dataFetchers/pokemon";
+import { usePokemonDetailState } from "@/components/hooks";
 
 export function PokemonDetail() {
-  const { params } = useRouter();
-  const id = params.id;
-
-  const cacheKey = pokemonCacheKeys.detail(id!);
-  const { data: pokemon, isLoading } = useData<PokemonDetailResponse>(cacheKey, {
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
-  });
+  const { pokemon, isLoading } = usePokemonDetailState();
 
   if (isLoading || !pokemon) return <div className="loading">Loading details...</div>;
 
