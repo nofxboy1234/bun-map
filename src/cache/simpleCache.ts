@@ -18,7 +18,8 @@ export type { CacheFetchOptions, DedupeMode } from "./simpleCacheInternals";
 
 /**
  * Recommended helper for route-driven loads: dedupe by cache key so concurrent
- * loaders/prefetchers for the same key share one network request.
+ * loaders/prefetchers for the same key share one network request when they
+ * belong to the same cancellation scope.
  *
  * For truly independent cancellation scopes, pass `dedupeMode: "signalAware"`
  * directly to `cache.fetch(...)`.
@@ -34,6 +35,7 @@ export class SimpleCache {
   private data = new Map<string, CacheEntry<any>>();
   private pending = new Map<string, PendingEntry<any>>();
   private generations = new Map<string, number>();
+  private versions = new Map<string, number>();
   private listeners = new CacheKeyListeners();
   private timers = new CacheEntryTimers(
     (key) => this.data.get(key),
@@ -45,7 +47,16 @@ export class SimpleCache {
     return this.listeners.subscribe(key, listener);
   }
 
+  getVersion(key: string) {
+    return this.versions.get(key) ?? 0;
+  }
+
+  private bumpVersion(key: string) {
+    this.versions.set(key, this.getVersion(key) + 1);
+  }
+
   private notify(key: string) {
+    this.bumpVersion(key);
     this.listeners.notify(key);
   }
 

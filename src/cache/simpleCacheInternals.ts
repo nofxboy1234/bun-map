@@ -105,6 +105,9 @@ function sleep(ms: number, signal?: AbortSignal) {
 
 function shouldReusePending<T>(pending: PendingEntry<T>, options: FetchRuntimeOptions) {
   if (options.dedupeMode === "byKey") {
+    if (options.signal && pending.signal && pending.signal !== options.signal) {
+      return false;
+    }
     return true;
   }
 

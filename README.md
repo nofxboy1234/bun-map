@@ -12,10 +12,10 @@ To start a development server:
 bun dev
 ```
 
-To run for production:
+To run the production bundle:
 
 ```bash
-bun start
+bun run start:dist
 ```
 
 This project was created using `bun init` in bun v1.3.9. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.

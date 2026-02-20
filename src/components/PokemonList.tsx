@@ -2,7 +2,11 @@ import { Link } from "@/router/components/Link";
 import { usePokemonListState } from "@/components/hooks";
 
 export function PokemonList() {
-  const { list, items, isLoading } = usePokemonListState();
+  const { list, items, isLoading, error } = usePokemonListState();
+
+  if (error) {
+    return <div className="loading">Failed to load list: {error.message}</div>;
+  }
 
   if (isLoading || !list) return <div className="loading">Loading list...</div>;
 

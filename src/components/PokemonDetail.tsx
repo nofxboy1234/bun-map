@@ -2,7 +2,11 @@ import { Link } from "@/router/components/Link";
 import { usePokemonDetailState } from "@/components/hooks";
 
 export function PokemonDetail() {
-  const { pokemon, isLoading } = usePokemonDetailState();
+  const { pokemon, isLoading, error } = usePokemonDetailState();
+
+  if (error) {
+    return <div className="loading">Failed to load details: {error.message}</div>;
+  }
 
   if (isLoading || !pokemon) return <div className="loading">Loading details...</div>;
 

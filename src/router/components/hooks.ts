@@ -20,11 +20,14 @@ export function useLinkInteractions({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prefetchAbortRef = useRef<AbortController | null>(null);
   const preservePrefetchRef = useRef(false);
+  const targetPathname = useMemo(() => new URL(href, window.location.origin).pathname, [href]);
 
-  const isActive = useMemo(
-    () => url.pathname === href || (href !== "/" && url.pathname.startsWith(href)),
-    [href, url.pathname],
-  );
+  const isActive = useMemo(() => {
+    if (targetPathname === "/") {
+      return url.pathname === "/";
+    }
+    return url.pathname === targetPathname || url.pathname.startsWith(`${targetPathname}/`);
+  }, [targetPathname, url.pathname]);
 
   useEffect(() => {
     return () => {

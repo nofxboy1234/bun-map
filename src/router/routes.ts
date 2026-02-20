@@ -52,7 +52,7 @@ export const routes: RouteConfig[] = [
         routeFetchOptions({
           signal,
           staleTime: 30_000,
-          gcTime: 5 * 60_000,
+          gcTime: 45_000,
         }),
       ),
   },
@@ -75,7 +75,7 @@ export const routes: RouteConfig[] = [
         routeFetchOptions({
           signal,
           staleTime: 60_000,
-          gcTime: 10 * 60_000,
+          gcTime: 90_000,
         }),
       );
     },
