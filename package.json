@@ -11,7 +11,7 @@
     "dev": "bun --hot src/index.tsx",
     "dev:debug": "bun --inspect-brk src/index.tsx",
     "build": "bun build --target=bun --production --outdir=dist --public-path=/ --env=BUN_PUBLIC_* src/index.tsx",
-    "start:dist": "cd dist && bun index.js",
+    "start:dist": "cd dist && GOODBYE=bye! bun index.js",
     "clean": "rm -rf dist && echo 'Cleaned dist.'"
   },
   "dependencies": {
@@ -23,7 +23,7 @@
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19",
     "@typescript/native-preview": "^7.0.0-dev.20260219.1",
-    "oxfmt": "^0.33.0",
-    "oxlint": "^1.48.0"
+    "oxfmt": "^0.34.0",
+    "oxlint": "^1.49.0"
   }
 }

@@ -1,6 +1,9 @@
 import { serve } from "bun";
 import index from "@/index.html";
 
+console.log(`backend: ${process.env.BUN_PUBLIC_HELLO}`);
+console.log(`backend: ${process.env.GOODBYE}`);
+
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 const server = serve({
