@@ -22,7 +22,7 @@
     "@types/bun": "latest",
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19",
-    "@typescript/native-preview": "^7.0.0-dev.20260221.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260223.1",
     "oxfmt": "^0.34.0",
     "oxlint": "^1.49.0"
   }
