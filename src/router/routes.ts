@@ -96,6 +96,7 @@ for (const route of routes) {
       route,
       parts: route.path.split("/").filter(Boolean),
     });
+
     continue;
   }
 

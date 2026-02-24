@@ -45,9 +45,11 @@ export function RouterProvider({
 
 export function useRouter() {
   const context = useContext(RouterContext);
+
   if (!context) {
     const fallbackUrl = window.location.href;
     const url = new URL(fallbackUrl);
+
     return {
       url,
       path: url.pathname,

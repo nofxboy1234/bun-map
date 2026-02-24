@@ -26,6 +26,7 @@ const ROUTE_REVALIDATE_OPTIONS: UseDataOptions = {
 
 function getRequiredRouteParam(params: Record<string, string>, key: string) {
   const value = params[key];
+
   if (!value) {
     throw new Error(`Missing required route param "${key}".`);
   }
@@ -37,6 +38,7 @@ function toDisplayError(err: unknown) {
   if (err instanceof Error) {
     return err;
   }
+
   return new Error("Failed to load route data.");
 }
 
@@ -52,6 +54,7 @@ export function useData<T>(key: string, options?: UseDataOptions) {
     (notify: () => void) => cache.subscribe(key, notify),
     () => cache.getVersion(key),
   );
+
   const data = cache.get(key) as T | undefined;
   const isFetching = cache.isPending(key);
   const isStale = data !== undefined && cache.isStale(key);
@@ -80,7 +83,9 @@ export function useData<T>(key: string, options?: UseDataOptions) {
         if (isAbortError(err)) {
           return;
         }
+
         setError(toDisplayError(err));
+
         console.error("Route data reconciliation failed", {
           key,
           path: url.pathname,
@@ -172,6 +177,7 @@ export function usePokemonListState() {
   const { search } = useRouter();
   const limit = getPokemonListLimit(search);
   const cacheKey = useMemo(() => pokemonCacheKeys.list(limit), [limit]);
+
   const {
     data: list,
     isLoading,
@@ -201,6 +207,7 @@ export function usePokemonDetailState() {
   const { params } = useRouter();
   const id = getRequiredRouteParam(params, "id");
   const cacheKey = useMemo(() => pokemonCacheKeys.detail(id), [id]);
+
   const {
     data: pokemon,
     isLoading,

@@ -45,6 +45,7 @@ export function useMatchedRoute(
 export function useNavigate() {
   return useCallback((path: string) => {
     const targetUrl = new URL(path, window.location.origin);
+
     if (
       targetUrl.pathname === window.location.pathname &&
       targetUrl.search === window.location.search
@@ -66,6 +67,7 @@ export function useRouteDataLoading(
   const [isNavigating, setIsNavigating] = useState(() => {
     const currentUrl = new URL(window.location.href);
     const currentMatch = matchRoute(currentUrl.pathname);
+
     return !!currentMatch?.route.loadData;
   });
   const loadSeqRef = useRef(0);
@@ -80,6 +82,7 @@ export function useRouteDataLoading(
 
     if (!match?.route.loadData) {
       setIsNavigating(false);
+
       return () => {
         cancelled = true;
       };
@@ -94,6 +97,7 @@ export function useRouteDataLoading(
         if (isAbortError(err)) {
           return;
         }
+
         console.error("Route data load failed", err);
       })
       .finally(() => {
@@ -110,6 +114,7 @@ export function useRouteDataLoading(
     return () => {
       cancelled = true;
       controller.abort();
+
       if (loadAbortRef.current === controller) {
         loadAbortRef.current = null;
       }
@@ -126,6 +131,7 @@ export async function loadRouteData(
   signal?: AbortSignal,
 ) {
   if (!match?.route.loadData) return;
+
   const search = validateRouteSearch(match.route, url);
   await match.route.loadData(cache, match.params, search, url, signal);
 }

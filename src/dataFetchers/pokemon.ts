@@ -34,9 +34,11 @@ class HttpError extends Error {
 
 async function fetchJson<T>(url: string, signal?: AbortSignal) {
   const res = await fetch(url, { signal });
+
   if (!res.ok) {
     throw new HttpError(res.status, `Request failed: ${res.status}`);
   }
+
   return (await res.json()) as T;
 }
 

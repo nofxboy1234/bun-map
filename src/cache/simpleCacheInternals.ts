@@ -132,6 +132,7 @@ class CacheKeyListeners {
 
     return () => {
       const listeners = this.listenersByKey.get(key);
+
       if (!listeners) {
         return;
       }
@@ -146,6 +147,7 @@ class CacheKeyListeners {
 
   notify(key: string) {
     const listeners = this.listenersByKey.get(key);
+
     if (!listeners) {
       return;
     }
@@ -179,6 +181,7 @@ class CacheEntryTimers {
     if (staleDelay > 0) {
       const timer = setTimeout(() => {
         const current = this.getCurrentEntry(key);
+
         if (!current || current.staleAt !== entry.staleAt) {
           return;
         }
@@ -192,6 +195,7 @@ class CacheEntryTimers {
     if (gcDelay > 0) {
       const timer = setTimeout(() => {
         const current = this.getCurrentEntry(key);
+
         if (!current || current.expiresAt !== entry.expiresAt) {
           return;
         }
@@ -205,6 +209,7 @@ class CacheEntryTimers {
 
   private clearStaleTimer(key: string) {
     const staleTimer = this.staleTimers.get(key);
+
     if (!staleTimer) {
       return;
     }
@@ -215,6 +220,7 @@ class CacheEntryTimers {
 
   private clearGcTimer(key: string) {
     const gcTimer = this.gcTimers.get(key);
+
     if (!gcTimer) {
       return;
     }

@@ -89,6 +89,7 @@ export class SimpleCache {
 
   private setEntry<T>(key: string, value: T, staleTime: number, gcTime: number) {
     const now = Date.now();
+
     const entry = {
       value,
       staleAt: now + staleTime,
@@ -191,6 +192,7 @@ export class SimpleCache {
       .catch((err) => {
         this.clearPendingIfCurrent(key, promise);
         this.notify(key);
+
         throw err;
       });
 

@@ -26,6 +26,7 @@ export function useLinkInteractions({
     if (targetPathname === "/") {
       return url.pathname === "/";
     }
+
     return url.pathname === targetPathname || url.pathname.startsWith(`${targetPathname}/`);
   }, [targetPathname, url.pathname]);
 
@@ -34,6 +35,7 @@ export function useLinkInteractions({
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
+
       if (!preservePrefetchRef.current) {
         prefetchAbortRef.current?.abort();
         prefetchAbortRef.current = null;
@@ -56,9 +58,11 @@ export function useLinkInteractions({
 
       event.preventDefault();
       preservePrefetchRef.current = true;
+
       setTimeout(() => {
         preservePrefetchRef.current = false;
       }, 0);
+
       navigate(href);
     },
     [href, navigate],
@@ -69,6 +73,7 @@ export function useLinkInteractions({
     const match = matchRoute(targetUrl.pathname);
     const controller = new AbortController();
     prefetchAbortRef.current = controller;
+
     loadRouteData(match, cache, targetUrl, controller.signal).catch((err) => {
       if (!isAbortError(err)) {
         console.error("Prefetch failed", err);
@@ -84,8 +89,10 @@ export function useLinkInteractions({
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
+
     prefetchAbortRef.current?.abort();
     prefetchAbortRef.current = null;
+
     timerRef.current = setTimeout(() => {
       prefetchRouteData();
     }, prefetchTimeout);
@@ -96,9 +103,11 @@ export function useLinkInteractions({
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
+
     if (preservePrefetchRef.current) {
       return;
     }
+
     prefetchAbortRef.current?.abort();
     prefetchAbortRef.current = null;
   }, []);
