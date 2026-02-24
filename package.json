@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "log": "git log --since='midnight'",
     "update:codex": "npm i -g @openai/codex@latest",
     "fmt": "oxfmt",
     "lint": "oxlint --fix",
