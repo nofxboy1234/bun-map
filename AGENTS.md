@@ -28,6 +28,7 @@ This is a Bun + React + TypeScript app. Most code lives in `src/`.
 - `bun run tsgo`: type-check the project.
 
 Before running `bun run build`, always run `bun run clean` first.
+Always make sure you have the latest versions of files.
 
 ## Coding Style & Naming Conventions
 
