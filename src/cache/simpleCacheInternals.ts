@@ -98,6 +98,7 @@ function sleep(ms: number, signal?: AbortSignal) {
         onAbort();
         return;
       }
+
       signal.addEventListener("abort", onAbort, { once: true });
     }
   });
