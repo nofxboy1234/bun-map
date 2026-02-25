@@ -7,7 +7,11 @@ console.log(`frontend: ${process.env.BUN_PUBLIC_HELLO}`);
 
 const elem = document.getElementById("root")!;
 
-const app = <App />;
+const app = (
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
 
 if (import.meta.hot) {
   const root = (import.meta.hot.data.root ??= createRoot(elem));
