@@ -90,8 +90,8 @@ export function useRouteDataLoading(
 
     const controller = new AbortController();
     loadAbortRef.current = controller;
-
     setIsNavigating(true);
+
     loadRouteData(match, cache, url, controller.signal)
       .catch((err) => {
         if (isAbortError(err)) {
