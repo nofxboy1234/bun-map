@@ -105,19 +105,22 @@ for (const route of routes) {
   staticRouteMap.set(route.path, route);
 }
 
-// Helper to find a matching route
-export function matchRoute(pathname: string): RouteMatch | undefined {
-  // Static route lookup is O(1); dynamic route matching scans only param routes.
-  const staticRoute = staticRouteMap.get(pathname);
-  if (staticRoute) {
-    try {
-      const params = staticRoute.validateParams?.({}) ?? {};
-      return { route: staticRoute, params };
-    } catch {
-      return undefined;
-    }
-  }
+function matchStatic(staticRoute: RouteConfig): RouteMatch | undefined {
+  return withValidatedParams(staticRoute, {});
+}
 
+function withValidatedParams(
+  route: RouteConfig,
+  params: Record<string, string>,
+): RouteMatch | undefined {
+  try {
+    return { route, params: route.validateParams?.(params) ?? params };
+  } catch {
+    return undefined;
+  }
+}
+
+function matchDynamic(pathname: string): RouteMatch | undefined {
   const currentParts = pathname.split("/").filter(Boolean);
 
   for (const entry of paramRouteEntries) {
@@ -141,16 +144,21 @@ export function matchRoute(pathname: string): RouteMatch | undefined {
     }
 
     if (matched) {
-      try {
-        const validatedParams = entry.route.validateParams?.(params) ?? params;
-        return { route: entry.route, params: validatedParams };
-      } catch {
-        continue;
+      const match = withValidatedParams(entry.route, params);
+      if (match) {
+        return match;
       }
     }
   }
 
   return undefined;
+}
+
+// Helper to find a matching route
+export function matchRoute(pathname: string): RouteMatch | undefined {
+  // Static route lookup is O(1); dynamic route matching scans only param routes.
+  const staticRoute = staticRouteMap.get(pathname);
+  return staticRoute ? matchStatic(staticRoute) : matchDynamic(pathname);
 }
 
 export function validateRouteSearch(route: RouteConfig | undefined, url: URL): RouteSearch {

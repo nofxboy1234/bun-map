@@ -31,10 +31,10 @@ const server = serve({
 
   development: isDevelopment && {
     // Enable browser hot reloading in development.
-    hmr: true,
+    hmr: false,
 
     // Echo browser console logs in the server process.
-    console: true,
+    console: false,
   },
 });
 
