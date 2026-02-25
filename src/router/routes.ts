@@ -105,10 +105,6 @@ for (const route of routes) {
   staticRouteMap.set(route.path, route);
 }
 
-function matchStatic(staticRoute: RouteConfig): RouteMatch | undefined {
-  return withValidatedParams(staticRoute, {});
-}
-
 function withValidatedParams(
   route: RouteConfig,
   params: Record<string, string>,
@@ -118,6 +114,10 @@ function withValidatedParams(
   } catch {
     return undefined;
   }
+}
+
+function matchStatic(staticRoute: RouteConfig): RouteMatch | undefined {
+  return withValidatedParams(staticRoute, {});
 }
 
 function matchDynamic(pathname: string): RouteMatch | undefined {
