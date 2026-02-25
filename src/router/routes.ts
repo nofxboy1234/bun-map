@@ -60,9 +60,11 @@ export const routes: RouteConfig[] = [
     path: "/pokemon/:id",
     validateParams: (params) => {
       const id = params.id;
+
       if (!id || !/^\d+$/.test(id) || Number(id) < 1) {
         throw new Error("Invalid pokemon id");
       }
+
       return { id };
     },
     getCacheKey: (params) => pokemonCacheKeys.detail(params.id!),
@@ -117,6 +119,7 @@ export function matchRoute(pathname: string): RouteMatch | undefined {
   }
 
   const currentParts = pathname.split("/").filter(Boolean);
+
   for (const entry of paramRouteEntries) {
     if (entry.parts.length !== currentParts.length) {
       continue;
