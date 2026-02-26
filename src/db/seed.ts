@@ -50,10 +50,13 @@ const findInsertedId = (insertedRows: DbRow[], resolvedRow: ResolvedSeedRow) => 
   const matched = insertedRows.find((row) =>
     Object.entries(resolvedRow).every(([key, value]) => row[key] === value),
   );
+
   const id = matched?.id;
+
   if (typeof id !== "number") {
     return null;
   }
+
   return id;
 };
 
@@ -70,11 +73,13 @@ const seedTable = async (table: SeedTableData) => {
 
   table.data.forEach((model, index) => {
     const id = findInsertedId(insertedRows, resolvedRows[index]!);
+
     if (id === null) {
       throw new Error(
         `Unable to resolve inserted id for table "${table.table}" at row ${index + 1}.`,
       );
     }
+
     model.id = id;
   });
 

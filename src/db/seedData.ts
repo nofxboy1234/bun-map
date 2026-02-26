@@ -27,9 +27,11 @@ const withNameSeedKeys = <T extends { id: number | null; name: () => string }>(r
 
 const getIdBySeedKey = <T extends SeedKeyedModel>(rows: T[], seedKey: string) => {
   const row = rows.find((item) => item.seedKey === seedKey);
+
   if (!row || row.id === null) {
     throw new Error(`Missing id for seed key "${seedKey}". Seed dependency order is invalid.`);
   }
+
   return row.id;
 };
 
