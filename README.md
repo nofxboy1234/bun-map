@@ -36,4 +36,10 @@ bun run db:migrate
 bun run db:reset
 ```
 
+- Reset, migrate, and seed:
+
+```bash
+bun run db:seed
+```
+
 The migration runner tracks applied files in `schema_migrations` with a checksum. If an applied file is edited, `db:migrate` fails; create a new migration file instead.

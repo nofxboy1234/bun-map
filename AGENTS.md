@@ -45,6 +45,7 @@ Always make sure you have the latest versions of files.
 - Raw SQL migrations are the source of truth (not Drizzle migrations). Use:
   - `bun run db:migrate` to apply pending `.sql` files in `migrations/`.
   - `bun run db:reset` to drop/recreate `public` and replay all migrations.
+  - `bun run db:seed` to reset, migrate, then seed sample data from `src/db/seedData.ts`.
 - Migration file naming convention is `NNNN_description.sql` (example: `0002_add_character_indexes.sql`).
 - Migration runner uses Bun SQL `sql.file(...)` so one `.sql` file can contain multiple statements.
 - Applied migrations are tracked in `schema_migrations` with a checksum; never edit an already-applied file, add a new one instead.
