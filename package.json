@@ -6,6 +6,8 @@
   "scripts": {
     "log": "git log --since='midnight'",
     "update:codex": "npm i -g @openai/codex@latest",
+    "db:migrate": "bun run src/db/migrate.ts",
+    "db:reset": "bun run src/db/reset.ts",
     "fmt": "oxfmt",
     "lint": "oxlint --fix",
     "tsgo": "bunx --bun tsgo",
