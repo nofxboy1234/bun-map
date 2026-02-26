@@ -5,20 +5,33 @@ import { PokemonDetail } from "@/components/PokemonDetail";
 
 export type RouteSearch = Record<string, unknown>;
 
-export type RouteConfig = {
+type RouteConfigBase = {
   path: string;
   component: React.ComponentType;
   validateParams?: (params: Record<string, string>) => Record<string, string>;
   validateSearch?: (search: URLSearchParams) => RouteSearch;
-  getCacheKey?: (params: Record<string, string>, search: RouteSearch, url: URL) => string;
-  loadData?: (
-    cache: SimpleCache,
-    params: Record<string, string>,
-    search: RouteSearch,
-    url: URL,
-    signal?: AbortSignal,
-  ) => Promise<unknown>;
 };
+
+type RouteCacheKeyFn = (params: Record<string, string>, search: RouteSearch, url: URL) => string;
+type RouteLoadDataFn = (
+  cache: SimpleCache,
+  params: Record<string, string>,
+  search: RouteSearch,
+  url: URL,
+  signal?: AbortSignal,
+) => Promise<unknown>;
+
+type RouteConfigWithLoadData = RouteConfigBase & {
+  getCacheKey: RouteCacheKeyFn;
+  loadData: RouteLoadDataFn;
+};
+
+type RouteConfigWithoutLoadData = RouteConfigBase & {
+  getCacheKey?: RouteCacheKeyFn;
+  loadData?: undefined;
+};
+
+export type RouteConfig = RouteConfigWithLoadData | RouteConfigWithoutLoadData;
 
 export type RouteMatch = {
   route: RouteConfig;
