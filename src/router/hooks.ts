@@ -3,6 +3,20 @@ import type { SimpleCache } from "@/cache";
 import { isAbortError } from "@/utils/errors";
 import { validateRouteSearch, type RouteConfig, type RouteMatch, type RouteSearch } from "./routes";
 
+function hasFreshRouteCache(match: RouteMatch | undefined, cache: SimpleCache, url: URL) {
+  if (!match?.route.getCacheKey) {
+    return false;
+  }
+
+  try {
+    const search = validateRouteSearch(match.route, url);
+    const cacheKey = match.route.getCacheKey(match.params, search, url);
+    return !cache.isStale(cacheKey);
+  } catch {
+    return false;
+  }
+}
+
 export function useRouterUrlString() {
   const subscribe = useCallback((callback: () => void) => {
     window.addEventListener("popstate", callback);
@@ -81,6 +95,14 @@ export function useRouteDataLoading(
     loadAbortRef.current = null;
 
     if (!match?.route.loadData) {
+      setIsNavigating(false);
+
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (hasFreshRouteCache(match, cache, url)) {
       setIsNavigating(false);
 
       return () => {
