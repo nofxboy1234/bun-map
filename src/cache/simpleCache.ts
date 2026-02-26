@@ -123,7 +123,7 @@ export class SimpleCache {
     const entry = this.getEntry(key);
     if (!entry) return true;
 
-    return Date.now() > entry.staleAt;
+    return Date.now() >= entry.staleAt;
   }
 
   isPending(key: string) {
@@ -151,7 +151,7 @@ export class SimpleCache {
     const entry = this.getEntry(key);
 
     if (entry) {
-      if (now <= entry.staleAt) {
+      if (now < entry.staleAt) {
         return entry.value;
       }
 
