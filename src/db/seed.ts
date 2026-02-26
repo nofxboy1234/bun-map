@@ -32,7 +32,7 @@ const resolveModel = (model: SeedModel) => {
   const resolved: ResolvedSeedRow = {};
 
   for (const [key, value] of Object.entries(model)) {
-    if (key === "id") {
+    if (key === "id" || key === "seedKey") {
       continue;
     }
 
