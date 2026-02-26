@@ -1,14 +1,16 @@
 :root {
-  --bg: #f7f1e9;
-  --bg-strong: #f1e6d8;
-  --surface: #fffaf2;
-  --ink: #1f1b16;
-  --muted: #675d52;
-  --accent: #ca2d10;
-  --accent-strong: #8e1d0a;
-  --line: #d4c6b5;
-  --success: #2a6f32;
-  --warning: #92531a;
+  --bg: #282a36;
+  --bg-strong: #1f2029;
+  --surface: #303341;
+  --ink: #f8f8f2;
+  --muted: #6272a4;
+  --accent: #bd93f9;
+  --accent-strong: #ff79c6;
+  --line: #44475a;
+  --success: #50fa7b;
+  --warning: #ffb86c;
+  --danger: #ff5555;
+  --path: #8be9fd;
   font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
   line-height: 1.4;
   color: var(--ink);
@@ -25,8 +27,8 @@ body {
   min-height: 100vh;
   color: var(--ink);
   background:
-    radial-gradient(circle at 10% 10%, #fbe9db 0, transparent 40%),
-    radial-gradient(circle at 85% 15%, #f7dcc7 0, transparent 35%),
+    radial-gradient(circle at 10% 10%, #3c324f 0, transparent 42%),
+    radial-gradient(circle at 85% 15%, #352c49 0, transparent 35%),
     linear-gradient(160deg, var(--bg) 0%, var(--bg-strong) 100%);
 }
 
@@ -69,7 +71,7 @@ body {
   color: var(--accent-strong);
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.8);
+  background: #383a4a;
   padding: 0.45rem 0.9rem;
   transition:
     transform 120ms ease,
@@ -79,7 +81,7 @@ body {
 .nav-link:hover,
 .nav-link.active {
   transform: translateY(-1px);
-  background: #fff;
+  background: #44475a;
 }
 
 main {
@@ -102,7 +104,7 @@ main {
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 1rem;
-  box-shadow: 0 10px 30px rgba(48, 32, 12, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .panel h3 {
@@ -126,14 +128,15 @@ select {
   margin-top: 0.35rem;
   padding: 0.55rem 0.7rem;
   border-radius: 10px;
-  border: 1px solid #b8a996;
-  background: #fff;
+  border: 1px solid var(--line);
+  background: #3a3d4d;
+  color: var(--ink);
 }
 
 button {
   border: 1px solid var(--accent-strong);
   border-radius: 10px;
-  color: #fff;
+  color: #1f2029;
   background: var(--accent);
   padding: 0.55rem 0.85rem;
   font-weight: 700;
@@ -160,7 +163,7 @@ button:disabled {
 
 .error {
   margin: 0;
-  color: #8b0d0d;
+  color: var(--danger);
   font-weight: 700;
 }
 
@@ -171,43 +174,43 @@ button:disabled {
   height: auto;
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: #fff;
+  background: #383a4a;
 }
 
 .edge {
-  stroke: #c9b29a;
+  stroke: #6272a4;
   stroke-width: 2;
 }
 
 .edge.active {
-  stroke: #008ecf;
+  stroke: var(--path);
   stroke-width: 4;
 }
 
 .node {
-  fill: #f2e4d0;
-  stroke: #9f8a71;
+  fill: #44475a;
+  stroke: #6272a4;
   stroke-width: 2;
 }
 
 .node.hunter {
-  fill: #2a6f32;
-  stroke: #17451e;
+  fill: var(--success);
+  stroke: #3ba960;
 }
 
 .node.devil {
-  fill: #ca2d10;
-  stroke: #7d1a0c;
+  fill: var(--danger);
+  stroke: #ce4444;
 }
 
 .node.path {
-  fill: #4ba2cf;
-  stroke: #1d678a;
+  fill: var(--path);
+  stroke: #5ac6db;
 }
 
 .node-label {
   font-size: 12px;
-  fill: #3d352b;
+  fill: var(--ink);
 }
 
 .list-container,
@@ -234,7 +237,7 @@ button:disabled {
   color: var(--accent-strong);
   border: 1px solid var(--line);
   border-radius: 9px;
-  background: #fff;
+  background: #383a4a;
   padding: 0.55rem;
 }
 
