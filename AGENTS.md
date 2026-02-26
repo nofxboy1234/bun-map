@@ -39,6 +39,10 @@ Always make sure you have the latest versions of files.
 - Utility and data modules use lowercase or camel-style names (for example `pokemon.ts`).
 - Use native Bun and Web API's when implementing features.
 
+## Database
+
+- The project is configured to connect to a local postgres database automatically using Bun's .env auto-loading
+
 ## Testing Guidelines
 
 There is currently no dedicated automated test suite in this repository. Until one is added:
