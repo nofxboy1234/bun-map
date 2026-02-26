@@ -155,15 +155,8 @@ export function useData<T>(key: string, options?: UseDataOptions) {
 
 export function useAppContentState() {
   const { route } = useRouter();
-  const [count, setCount] = useState(0);
-
-  const incrementCount = useCallback(() => {
-    setCount((value) => value + 1);
-  }, []);
 
   return {
-    count,
-    incrementCount,
     routeComponent: route?.component,
   };
 }

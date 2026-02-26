@@ -2,6 +2,7 @@ import { routeFetchOptions, SimpleCache } from "@/cache";
 import { fetchPokemonList, fetchPokemonDetail, pokemonCacheKeys } from "@/dataFetchers/pokemon";
 import { PokemonList } from "@/components/PokemonList";
 import { PokemonDetail } from "@/components/PokemonDetail";
+import { HunterMap } from "@/components/HunterMap";
 
 export type RouteSearch = Record<string, unknown>;
 
@@ -47,6 +48,10 @@ export function getPokemonListLimit(search: RouteSearch) {
 export const routes: RouteConfig[] = [
   {
     path: "/",
+    component: HunterMap,
+  },
+  {
+    path: "/pokemon",
     validateSearch: (search) => {
       const rawLimit = search.get("limit");
       const parsedLimit = rawLimit ? Number.parseInt(rawLimit, 10) : Number.NaN;

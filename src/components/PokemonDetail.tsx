@@ -12,7 +12,7 @@ export function PokemonDetail() {
 
   return (
     <div className="card">
-      <Link href="/" className="back-link">
+      <Link href="/pokemon" className="back-link">
         ← Back to List
       </Link>
       <h2>{pokemon.name}</h2>
