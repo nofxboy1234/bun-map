@@ -352,10 +352,13 @@ export const re9UndirectedEdges: Array<[number, number, number]> = [
 
 export function buildRe9Graph(nodeCount = re9NodePositions.length): Edge[][] {
   const graph: Edge[][] = Array.from({ length: nodeCount }, () => []);
+
   for (const [a, b, weight] of re9UndirectedEdges) {
     const from = graph[a];
     const to = graph[b];
+
     if (!from || !to) continue;
+
     from.push({ to: b, weight });
     to.push({ to: a, weight });
   }
@@ -387,6 +390,7 @@ export function findNearestTargetPath(
     const targetDistance = dist[target];
     if (typeof targetDistance !== "number") continue;
     if (!Number.isFinite(targetDistance)) continue;
+
     if (targetDistance < bestDistance) {
       bestDistance = targetDistance;
       bestTarget = target;
