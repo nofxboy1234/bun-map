@@ -22,6 +22,7 @@ class MinHeap<T> {
     if (!first) return undefined;
 
     const last = this.data.pop();
+
     if (this.data.length > 0 && last) {
       this.data[0] = last;
       this.bubbleDown(0);
@@ -32,11 +33,14 @@ class MinHeap<T> {
 
   private bubbleUp(index: number) {
     let current = index;
+
     while (current > 0) {
       const parent = Math.floor((current - 1) / 2);
       const parentNode = this.data[parent];
       const currentNode = this.data[current];
+
       if (!parentNode || !currentNode || parentNode.key <= currentNode.key) break;
+
       [this.data[parent], this.data[current]] = [currentNode, parentNode];
       current = parent;
     }
@@ -65,6 +69,7 @@ class MinHeap<T> {
       }
 
       if (smallest === current) break;
+
       const currentNode = this.data[current];
       const chosenNode = this.data[smallest];
       if (!currentNode || !chosenNode) break;
