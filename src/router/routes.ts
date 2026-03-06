@@ -2,6 +2,7 @@ import { routeFetchOptions, SimpleCache } from "@/cache";
 import { fetchPokemonList, fetchPokemonDetail, pokemonCacheKeys } from "@/dataFetchers/pokemon";
 import { PokemonList } from "@/components/PokemonList";
 import { PokemonDetail } from "@/components/PokemonDetail";
+import { DijkstraDemo } from "@/components/DijkstraDemo";
 
 export type RouteSearch = Record<string, unknown>;
 
@@ -94,6 +95,10 @@ export const routes: RouteConfig[] = [
         }),
       );
     },
+  },
+  {
+    path: "/dijkstra-demo",
+    component: DijkstraDemo,
   },
 ];
 

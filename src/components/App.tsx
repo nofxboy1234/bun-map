@@ -2,6 +2,7 @@ import { RouterProvider } from "@/router";
 import { matchRoute } from "@/router/routes";
 import { CacheProvider, globalCache, type SimpleCache } from "@/cache";
 import { useAppContentState } from "@/components/hooks";
+import { Link } from "@/router/components/Link";
 
 import "@/index.css";
 import logo from "@/assets/logo.svg";
@@ -27,21 +28,41 @@ function AppContent() {
   const content = Component ? <Component /> : <div>Not Found</div>;
 
   return (
-    <div className="app-container">
-      <header>
-        <h1>⚡ Bun Router Demo</h1>
+    <div className="app-shell">
+      <header className="app-header">
+        <div>
+          <p className="eyebrow">Bun + React + TypeScript</p>
+          <h1>Bun Router Demo</h1>
+          <p className="app-subtitle">
+            Client-side routes, cached loaders, and a local Dijkstra visualizer.
+          </p>
+        </div>
+
+        <div className="app-header-actions">
+          <button type="button" onClick={incrementCount}>
+            Count {count}
+          </button>
+          <a href="/users/duke" className="ghost-link">
+            Server route
+          </a>
+        </div>
       </header>
 
-      <div className="logo-container">
-        <img src={logo} alt="Bun Logo" className="logo bun-logo" />
-        <img src={reactLogo} alt="React Logo" className="logo react-logo" />
+      <nav className="app-nav" aria-label="Main navigation">
+        <Link href="/" className="app-nav-link">
+          Pokemon
+        </Link>
+        <Link href="/dijkstra-demo" className="app-nav-link">
+          Dijkstra Visualizer
+        </Link>
+      </nav>
+
+      <div className="logo-container" aria-hidden="true">
+        <img src={logo} alt="" className="logo bun-logo" />
+        <img src={reactLogo} alt="" className="logo react-logo" />
       </div>
 
-      <button onClick={incrementCount}>Count</button>
-      <div>{count}</div>
-      <a href="/users/duke">Duke</a>
-
-      <main>{content}</main>
+      <main className="app-main">{content}</main>
     </div>
   );
 }
