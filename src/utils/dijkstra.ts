@@ -101,25 +101,25 @@ export function dijkstra(graph: Edge[][], source: number): DijkstraResult {
     const current = queue.pop();
     if (!current) break;
 
-    const { key: currentDistance, value: u } = current;
-    if (currentDistance !== dist[u]) continue;
+    const { key: currentDistance, value: currentNodeIndex } = current;
+    if (currentDistance !== dist[currentNodeIndex]) continue;
 
-    const edges = graph[u];
+    const edges = graph[currentNodeIndex];
     if (!edges) continue;
 
-    for (const { to: v, weight } of edges) {
-      if (v < 0 || v >= nodeCount) continue;
+    for (const { to: neighborNodeIndex, weight } of edges) {
+      if (neighborNodeIndex < 0 || neighborNodeIndex >= nodeCount) continue;
       if (weight < 0) {
         throw new Error("Dijkstra requires non-negative edge weights.");
       }
 
-      const knownDistance = dist[v];
+      const knownDistance = dist[neighborNodeIndex];
       if (typeof knownDistance !== "number") continue;
       const nextDistance = currentDistance + weight;
       if (nextDistance < knownDistance) {
-        dist[v] = nextDistance;
-        prev[v] = u;
-        queue.push(nextDistance, v);
+        dist[neighborNodeIndex] = nextDistance;
+        prev[neighborNodeIndex] = currentNodeIndex;
+        queue.push(nextDistance, neighborNodeIndex);
       }
     }
   }
