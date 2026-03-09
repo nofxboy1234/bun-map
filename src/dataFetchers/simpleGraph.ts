@@ -1,6 +1,4 @@
-import { dijkstra, reconstructPath } from "@/utils/dijkstra";
-
-export type Edge = { to: number; weight: number };
+import type { Edge } from "@/utils/graphTypes";
 
 export const graph: Edge[][] = [
   [

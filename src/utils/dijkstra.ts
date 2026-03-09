@@ -1,4 +1,4 @@
-export type Edge = { to: number; weight: number };
+import type { Edge } from "@/utils/graphTypes";
 
 type HeapNode<T> = {
   key: number;

@@ -1,7 +1,6 @@
 // Auto-generated from src/assets/re9-rhodes-hill-graph.png
 import { dijkstra, reconstructPath } from "@/utils/dijkstra";
-
-export type Edge = { to: number; weight: number };
+import type { Edge } from "@/utils/graphTypes";
 
 export const re9NodePositions: Array<[number, number]> = [
   [192.19, 15.7],
