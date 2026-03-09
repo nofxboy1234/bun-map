@@ -374,10 +374,16 @@ export type NearestTargetPathResult = {
   prev: Array<number | null>;
 };
 
-export function getPath(graph: Edge[][], source: number, target: number) {
-  if (!graph[source] || !graph[target]) return null;
+export function getPath(
+  graph: Edge[][],
+  source: number,
+  target: number,
+): NearestTargetPathResult | null {
+  if (!graph[source]) return null;
 
   const { dist, prev } = dijkstra(graph, source);
+  const distance = dist[target];
+  if (typeof distance !== "number" || !Number.isFinite(distance)) return null;
 
   const path = reconstructPath(prev, target);
   if (path[0] !== source) return null;
@@ -385,8 +391,10 @@ export function getPath(graph: Edge[][], source: number, target: number) {
   return {
     source,
     target,
-    distance: dist[target],
+    distance,
     path,
+    dist,
+    prev,
   };
 }
 
