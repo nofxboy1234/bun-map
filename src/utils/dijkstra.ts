@@ -109,13 +109,16 @@ export function dijkstra(graph: Edge[][], source: number): DijkstraResult {
 
     for (const { to: neighborNodeIndex, weight } of edges) {
       if (neighborNodeIndex < 0 || neighborNodeIndex >= nodeCount) continue;
+
       if (weight < 0) {
         throw new Error("Dijkstra requires non-negative edge weights.");
       }
 
       const knownDistance = dist[neighborNodeIndex];
       if (typeof knownDistance !== "number") continue;
+
       const nextDistance = currentDistance + weight;
+
       if (nextDistance < knownDistance) {
         dist[neighborNodeIndex] = nextDistance;
         prev[neighborNodeIndex] = currentNodeIndex;
