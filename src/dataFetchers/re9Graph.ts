@@ -1,4 +1,11 @@
 // Auto-generated from src/assets/re9-rhodes-hill-graph.png
+import { findHeldKarpClosedTargetVisitTour } from "@/dataFetchers/routeSolvers/heldKarp";
+import { findNearestNeighborTwoOptClosedTargetVisitTour } from "@/dataFetchers/routeSolvers/nearestNeighbor2Opt";
+import type {
+  RouteAlgorithm,
+  TargetVisitSegment,
+  TargetVisitTourResult,
+} from "@/dataFetchers/routeSolvers/shared";
 import { dijkstra, reconstructPath } from "@/utils/dijkstra";
 import type { Edge } from "@/utils/graphTypes";
 
@@ -437,6 +444,47 @@ export function findNearestTargetPath(
 
 export function findNearestRe9TargetPath(graph = buildRe9Graph()): NearestTargetPathResult | null {
   return findNearestTargetPath(graph, re9Source, re9Targets);
+}
+
+export { routeAlgorithms } from "@/dataFetchers/routeSolvers/shared";
+export type { RouteAlgorithm, TargetVisitSegment, TargetVisitTourResult };
+
+const routeSolvers = {
+  "held-karp": findHeldKarpClosedTargetVisitTour,
+  "nearest-neighbor-2opt": findNearestNeighborTwoOptClosedTargetVisitTour,
+} as const satisfies Record<
+  RouteAlgorithm,
+  (graph: Edge[][], source: number, targets: readonly number[]) => TargetVisitTourResult | null
+>;
+
+export function findTargetVisitTour(
+  graph: Edge[][],
+  source: number,
+  targets: readonly number[],
+  algorithm: RouteAlgorithm = "held-karp",
+): TargetVisitTourResult | null {
+  return routeSolvers[algorithm](graph, source, targets);
+}
+
+export function findRe9TargetVisitTour(
+  graph = buildRe9Graph(),
+  algorithm: RouteAlgorithm = "held-karp",
+): TargetVisitTourResult | null {
+  return findTargetVisitTour(graph, re9Source, re9Targets, algorithm);
+}
+
+export function findShortestTargetVisitPath(
+  graph: Edge[][],
+  source: number,
+  targets: readonly number[],
+): TargetVisitTourResult | null {
+  return findHeldKarpClosedTargetVisitTour(graph, source, targets);
+}
+
+export function findShortestRe9TargetVisitPath(
+  graph = buildRe9Graph(),
+): TargetVisitTourResult | null {
+  return findHeldKarpClosedTargetVisitTour(graph, re9Source, re9Targets);
 }
 
 // Summary: 164 nodes, 172 undirected edges, 22 targets.
