@@ -36,12 +36,10 @@ class MinHeap<T> {
 
     while (current > 0) {
       const parent = Math.floor((current - 1) / 2);
-      const parentNode = this.data[parent];
-      const currentNode = this.data[current];
 
-      if (!parentNode || !currentNode || parentNode.key <= currentNode.key) break;
+      if (this.data[parent]!.key <= this.data[current]!.key) break;
 
-      [this.data[parent], this.data[current]] = [currentNode, parentNode];
+      [this.data[parent], this.data[current]] = [this.data[current]!, this.data[parent]!];
       current = parent;
     }
   }
