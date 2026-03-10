@@ -55,25 +55,17 @@ class MinHeap<T> {
       const left = current * 2 + 1;
       const right = current * 2 + 2;
 
-      const smallestNode = this.data[smallest];
-      const leftNode = this.data[left];
-      const rightNode = this.data[right];
-
-      if (left < length && smallestNode && leftNode && leftNode.key < smallestNode.key) {
+      if (left < length && this.data[left]!.key < this.data[smallest]!.key) {
         smallest = left;
       }
 
-      const newSmallestNode = this.data[smallest];
-      if (right < length && newSmallestNode && rightNode && rightNode.key < newSmallestNode.key) {
+      if (right < length && this.data[right]!.key < this.data[smallest]!.key) {
         smallest = right;
       }
 
       if (smallest === current) break;
 
-      const currentNode = this.data[current];
-      const chosenNode = this.data[smallest];
-      if (!currentNode || !chosenNode) break;
-      [this.data[current], this.data[smallest]] = [chosenNode, currentNode];
+      [this.data[current], this.data[smallest]] = [this.data[smallest]!, this.data[current]!];
       current = smallest;
     }
   }
