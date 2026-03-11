@@ -80,3 +80,7 @@ Recent commits use short, imperative subjects (for example: `Remove unused code`
 - Keep each commit focused on one logical change.
 - PRs should include: summary of behavior changes, affected paths, manual test steps, and screenshots/GIFs for UI changes.
 - Link related issues/tasks when applicable.
+
+## Collaboration Preference
+
+- If the user asks for code piece-by-piece, do not write the code into the repo unless they explicitly ask for implementation. Provide the snippets and explain each piece so the user can type it out themselves.

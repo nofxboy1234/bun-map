@@ -1,12 +1,10 @@
 // Auto-generated from src/assets/re9-rhodes-hill-graph.png
-import { findHeldKarpClosedTargetVisitTour } from "@/dataFetchers/routeSolvers/heldKarp";
 import { findNearestNeighborTwoOptClosedTargetVisitTour } from "@/dataFetchers/routeSolvers/nearestNeighbor2Opt";
 import type {
   RouteAlgorithm,
   TargetVisitSegment,
   TargetVisitTourResult,
 } from "@/dataFetchers/routeSolvers/shared";
-import { dijkstra, reconstructPath } from "@/utils/dijkstra";
 import type { Edge } from "@/utils/graphTypes";
 
 export const re9NodePositions: Array<[number, number]> = [
@@ -355,136 +353,3 @@ export const re9UndirectedEdges: Array<[number, number, number]> = [
   [37, 163, 18.49],
   [39, 163, 26.74],
 ];
-
-export function buildRe9Graph(nodeCount = re9NodePositions.length): Edge[][] {
-  const graph: Edge[][] = Array.from({ length: nodeCount }, () => []);
-
-  for (const [a, b, weight] of re9UndirectedEdges) {
-    const from = graph[a];
-    const to = graph[b];
-
-    if (!from || !to) continue;
-
-    from.push({ to: b, weight });
-    to.push({ to: a, weight });
-  }
-  return graph;
-}
-
-export type NearestTargetPathResult = {
-  source: number;
-  target: number;
-  distance: number;
-  path: number[];
-  dist: number[];
-  prev: Array<number | null>;
-};
-
-export function getPath(
-  graph: Edge[][],
-  source: number,
-  target: number,
-): NearestTargetPathResult | null {
-  if (!graph[source]) return null;
-
-  const { dist, prev } = dijkstra(graph, source);
-  const distance = dist[target];
-  if (typeof distance !== "number" || !Number.isFinite(distance)) return null;
-
-  const path = reconstructPath(prev, target);
-  if (path[0] !== source) return null;
-
-  return {
-    source,
-    target,
-    distance,
-    path,
-    dist,
-    prev,
-  };
-}
-
-export function findNearestTargetPath(
-  graph: Edge[][],
-  source: number,
-  targets: readonly number[],
-): NearestTargetPathResult | null {
-  if (!graph[source] || targets.length === 0) return null;
-
-  const { dist, prev } = dijkstra(graph, source);
-
-  let bestTarget: number | null = null;
-  let bestDistance = Infinity;
-
-  for (const target of targets) {
-    const targetDistance = dist[target];
-    if (typeof targetDistance !== "number") continue;
-    if (!Number.isFinite(targetDistance)) continue;
-
-    if (targetDistance < bestDistance) {
-      bestDistance = targetDistance;
-      bestTarget = target;
-    }
-  }
-
-  if (bestTarget === null || !Number.isFinite(bestDistance)) return null;
-
-  const path = reconstructPath(prev, bestTarget);
-  if (path[0] !== source) return null;
-
-  return {
-    source,
-    target: bestTarget,
-    distance: bestDistance,
-    path,
-    dist,
-    prev,
-  };
-}
-
-export function findNearestRe9TargetPath(graph = buildRe9Graph()): NearestTargetPathResult | null {
-  return findNearestTargetPath(graph, re9Source, re9Targets);
-}
-
-export { routeAlgorithms } from "@/dataFetchers/routeSolvers/shared";
-export type { RouteAlgorithm, TargetVisitSegment, TargetVisitTourResult };
-
-const routeSolvers = {
-  "held-karp": findHeldKarpClosedTargetVisitTour,
-  "nearest-neighbor-2opt": findNearestNeighborTwoOptClosedTargetVisitTour,
-} as const satisfies Record<
-  RouteAlgorithm,
-  (graph: Edge[][], source: number, targets: readonly number[]) => TargetVisitTourResult | null
->;
-
-export function findTargetVisitTour(
-  graph: Edge[][],
-  source: number,
-  targets: readonly number[],
-  algorithm: RouteAlgorithm = "held-karp",
-): TargetVisitTourResult | null {
-  return routeSolvers[algorithm](graph, source, targets);
-}
-
-export function findRe9TargetVisitTour(
-  graph = buildRe9Graph(),
-  algorithm: RouteAlgorithm = "held-karp",
-): TargetVisitTourResult | null {
-  return findTargetVisitTour(graph, re9Source, re9Targets, algorithm);
-}
-
-export function findShortestTargetVisitPath(
-  graph: Edge[][],
-  source: number,
-  targets: readonly number[],
-): TargetVisitTourResult | null {
-  return findHeldKarpClosedTargetVisitTour(graph, source, targets);
-}
-
-export function findShortestRe9TargetVisitPath(
-  graph = buildRe9Graph(),
-): TargetVisitTourResult | null {
-  return findHeldKarpClosedTargetVisitTour(graph, re9Source, re9Targets);
-}
-
-// Summary: 164 nodes, 172 undirected edges, 22 targets.
