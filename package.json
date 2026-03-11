@@ -6,6 +6,7 @@
   "scripts": {
     "log": "git log --since='midnight'",
     "update:codex": "npm i -g @openai/codex@latest",
+    "update:kitty": "curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin",
     "re9:all-targets": "bun src/maps/re9AllTargets.ts",
     "db:migrate": "bun run src/db/migrate.ts",
     "db:reset": "bun run src/db/reset.ts",
