@@ -1,12 +1,6 @@
-// Auto-generated from src/assets/re9-rhodes-hill-graph.png
-import { findNearestNeighborTwoOptClosedTargetVisitTour } from "@/dataFetchers/routeSolvers/nearestNeighbor2Opt";
-import type {
-  RouteAlgorithm,
-  TargetVisitSegment,
-  TargetVisitTourResult,
-} from "@/dataFetchers/routeSolvers/shared";
 import type { Edge } from "@/utils/graphTypes";
-
+import { aStar, type AStarResult } from "@/utils/aStar";
+// Auto-generated from src/assets/re9-rhodes-hill-graph.png
 export const re9NodePositions: Array<[number, number]> = [
   [192.19, 15.7],
   [127.83, 17.09],
@@ -173,6 +167,14 @@ export const re9NodePositions: Array<[number, number]> = [
   [338.0, 538.24],
   [695.13, 462.71],
 ];
+
+function estimateRe9StraightLineDistance(node: number, target: number) {
+  const from = re9NodePositions[node];
+  const to = re9NodePositions[target];
+  if (!from || !to) return 0;
+
+  return Math.hypot(to[0] - from[0], to[1] - from[1]);
+}
 
 export const re9Source = 126;
 export const re9Targets = [
@@ -353,3 +355,47 @@ export const re9UndirectedEdges: Array<[number, number, number]> = [
   [37, 163, 18.49],
   [39, 163, 26.74],
 ];
+
+export function buildRe9Graph(nodeCount = re9NodePositions.length): Edge[][] {
+  const graph: Edge[][] = Array.from({ length: nodeCount }, () => []);
+
+  for (const [a, b, weight] of re9UndirectedEdges) {
+    const from = graph[a];
+    const to = graph[b];
+
+    if (!from || !to) continue;
+
+    from.push({ to: b, weight });
+    to.push({ to: a, weight });
+  }
+
+  return graph;
+}
+export function getPath(graph: Edge[][], source: number, target: number): AStarResult | null {
+  return aStar(graph, source, target, estimateRe9StraightLineDistance);
+}
+
+export function findNearestTargetPath(
+  graph: Edge[][],
+  source: number,
+  targets: readonly number[],
+): AStarResult | null {
+  if (!graph[source] || targets.length === 0) return null;
+
+  let bestResult: AStarResult | null = null;
+
+  for (const target of targets) {
+    const result = aStar(graph, source, target, estimateRe9StraightLineDistance);
+    if (!result || !Number.isFinite(result.distance)) continue;
+
+    if (!bestResult || result.distance < bestResult.distance) {
+      bestResult = result;
+    }
+  }
+
+  return bestResult;
+}
+
+export function findNearestRe9TargetPath(graph = buildRe9Graph()): AStarResult | null {
+  return findNearestTargetPath(graph, re9Source, re9Targets);
+}
