@@ -29,7 +29,7 @@
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19",
     "@typescript/native-preview": "^7.0.0-dev.20260311.1",
-    "oxfmt": "^0.38.0",
-    "oxlint": "^1.53.0"
+    "oxfmt": "^0.39.0",
+    "oxlint": "^1.54.0"
   }
 }
